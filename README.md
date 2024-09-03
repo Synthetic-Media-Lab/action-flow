@@ -23,15 +23,41 @@ $ pnpm run start:dev
 $ pnpm run start:prod
 ```
 
-## Run tests
+## Code Quality
+
+### Linting and Formatting
+
+We use ESLint and Prettier to enforce consistent code style:
+
+-   **Lint the code:** `pnpm run lint`
+-   **Auto-fix lint issues:** `pnpm run lint:fix`
+-   **Format the code:** `pnpm run format`
+-   **Auto-fix formatting:** `pnpm run format:fix`
+
+### Commit Guidelines
+
+-   **Create a commit:** `pnpm run commit`
+
+### Husky Hooks
+
+-   **Pre-commit:** Lints, formats, tests, and builds before committing.
+-   **Commit-msg:** Ensures commit messages follow the conventional format.
+
+## Run Tests
 
 ```bash
 # unit tests
-$ pnpm run test
+pnpm run test
 
 # e2e tests
-$ pnpm run test:e2e
+pnpm run test:e2e
 
 # test coverage
-$ pnpm run test:cov
+pnpm run test:cov
 ```
+
+## Configuration
+
+-   **ESLint:** `.eslintrc.cjs`
+-   **Commitlint:** `commitlint.config.js`
+-   **Prettier (if applicable):** `prettier.config.js`
