@@ -1,10 +1,24 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from "@nestjs/common"
+import { AppController } from "./app.controller"
+import { AppService } from "./app.service"
+import { ConfigModule } from "@nestjs/config"
+import { resolve } from "path"
+import appConfig from "./appConfig"
+import { ActionAModule } from "./public/actions/action-a/action-a.module"
 
 @Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+            envFilePath:
+                process.env.NODE_ENV === "test"
+                    ? resolve(__dirname, "../.env.test")
+                    : resolve(__dirname, "../.env")
+        }),
+        ActionAModule
+    ],
+    controllers: [AppController],
+    providers: [AppService, ...appConfig],
+    exports: [ConfigModule]
 })
 export class AppModule {}
