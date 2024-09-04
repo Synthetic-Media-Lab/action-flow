@@ -99,6 +99,7 @@ For each request to your secured Cloud Run service, add the following **Pre-requ
                 console.log("Error fetching token:", err)
             } else {
                 const token = res.json().token
+
                 pm.variables.set("GCLOUD_IDENTITY_TOKEN", token) // Set the token as a variable
             }
         }
