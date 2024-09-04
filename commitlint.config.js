@@ -12,6 +12,9 @@ module.exports = {
         "subject-case": [2, "always", ["lower-case"]],
         "subject-full-stop": [2, "never", "."], // Disallow period at the end of the subject
 
+        // Enforce that the header (type + scope + subject) does not end with a period
+        "header-full-stop": [2, "never", "."],
+
         // Enforce that "revert" commits follow the same rules
         "header-case": [2, "always", "lower-case"]
     }
