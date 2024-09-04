@@ -12,7 +12,7 @@ export class ActionAService implements IActionA {
 
         // Business logic for Action-A
 
-        return `Action A executed with action ID: ${actionId} 
+        return `Action A executed with action id: ${actionId} 
         ${description ? `Optional description: "${description}"` : ""}`
     }
 }
