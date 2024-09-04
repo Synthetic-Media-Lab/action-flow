@@ -1,5 +1,6 @@
-import { Result } from "typescript-result"
+import { Result } from "pratica"
 import { CreateActionADto } from "../dto/create-action-a.dto"
+import { ActionAAsyncError } from "../error"
 import { ActionAError } from "../error/action-a.error"
 
 export interface IActionA extends IExecuteActionA, IExecuteAsyncActionA {}
@@ -11,5 +12,5 @@ interface IExecuteActionA {
 interface IExecuteAsyncActionA {
     executeAsyncActionA(
         action: CreateActionADto
-    ): Promise<Result<string, ActionAError>>
+    ): Promise<Result<string, ActionAAsyncError>>
 }
