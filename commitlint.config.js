@@ -6,12 +6,13 @@ module.exports = {
 
         // Allow scope to be optional, but if present, it must be lowercase
         "scope-case": [2, "always", "lower-case"],
-        "scope-empty": [0], // 0 means this rule is turned off, making the scope optional
+        "scope-empty": [0], // Scope is optional
 
-        // Enforce subject to start with a lowercase letter
+        // Enforce subject to start with a lowercase letter and disallow full stops at the end
         "subject-case": [2, "always", ["lower-case"]],
+        "subject-full-stop": [2, "never", "."], // Disallow period at the end of the subject
 
-        // Enforce that the subject does not end with a full stop
-        "subject-full-stop": [2, "never", "."]
+        // Enforce that "revert" commits follow the same rules
+        "header-case": [2, "always", "lower-case"]
     }
 }

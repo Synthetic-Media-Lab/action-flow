@@ -8,11 +8,11 @@ export class ActionAService implements IActionA {
     constructor() {}
 
     async executeActionA({ actionId, description }): Promise<string> {
-        this.logger.log(`Executing action for task ID: ${actionId}`)
+        this.logger.log(`Executing action for task id: ${actionId}`)
 
         // Business logic for Action-A
 
-        return `Action A executed with action ID: ${actionId} 
+        return `Action A executed with action id: ${actionId} 
         ${description ? `Optional description: "${description}"` : ""}`
     }
 }
