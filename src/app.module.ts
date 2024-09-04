@@ -3,7 +3,7 @@ import { AppController } from "./app.controller"
 import { AppService } from "./app.service"
 import { ConfigModule } from "@nestjs/config"
 import { resolve } from "path"
-import appConfig from "./appConfig"
+import appConfig from "./app-config"
 import { ActionAModule } from "./public/actions/action-a/action-a.module"
 
 @Module({

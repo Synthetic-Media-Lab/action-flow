@@ -29,6 +29,9 @@ importers:
       dotenv-cli:
         specifier: ^7.4.2
         version: 7.4.2
+      pratica:
+        specifier: ^2.3.0
+        version: 2.3.0
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
@@ -2573,6 +2576,9 @@ packages:
   pluralize@8.0.0:
     resolution: {integrity: sha512-Nc3IT5yHzflTfbjgqWcCPpo7DaKy4FnpB0l/zCAW0Tc7jxAiuqSxHasntB3D7887LSrA93kDJ9IXovxJYxyLCA==}
     engines: {node: '>=4'}
+
+  pratica@2.3.0:
+    resolution: {integrity: sha512-iQTsBYIZjvzzn5Oyf9QUOgkRR1+Gu4oEImVomYdSSj1RufEg8FoSxDs70P07OtIxBlDOkumMJaOFOAWwF0Zifg==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -6154,6 +6160,8 @@ snapshots:
       find-up: 4.1.0
 
   pluralize@8.0.0: {}
+
+  pratica@2.3.0: {}
 
   prelude-ls@1.2.1: {}
 
