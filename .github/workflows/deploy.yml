@@ -3,7 +3,7 @@ name: Test and Deploy to Google Cloud Run
 on:
     push:
         branches:
-            - main # Adjust if you want to trigger on other branches
+            - main
 
 jobs:
     deploy:
@@ -11,59 +11,53 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            # Step 1: Checkout the code
             - name: Checkout repository
               uses: actions/checkout@v3
 
-            # Step 2: Set up Node.js
             - name: Set up Node.js
               uses: actions/setup-node@v3
               with:
-                  node-version: "18" # Specify the Node.js version you are using
+                  node-version: "20"
 
-            # Step 3: Install pnpm
             - name: Install pnpm
               run: |
                   npm install -g pnpm
 
-            # Step 4: Install dependencies
             - name: Install dependencies
               run: |
                   pnpm install
 
-            # Step 5: Run tests
             - name: Run tests
               run: |
                   pnpm test
 
-            # Step 6: Authenticate to Google Cloud
             - name: Authenticate to Google Cloud
               uses: google-github-actions/auth@v1
               with:
                   credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
 
-            # Step 7: Set up Google Cloud SDK
             - name: Set up Google Cloud SDK
               uses: google-github-actions/setup-gcloud@v1
               with:
-                  project_id: ${{ secrets.GCP_PROJECT_ID }}
+                  project_id: ${{ secrets.GC_PROJECT_ID }} # Updated to match your secret
 
-            # Step 8: Configure Docker for Google Cloud Run
             - name: Configure Docker for Google Cloud Run
               run: |
                   gcloud auth configure-docker
 
-            # Step 9: Build and push Docker image to Google Container Registry
+            # Build and push Docker image
             - name: Build and push Docker image
               run: |
-                  docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA .
-                  docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA
+                  docker build -t gcr.io/${{ secrets.GC_PROJECT_ID }}/action-flow-service:$GITHUB_SHA .
+                  docker push gcr.io/${{ secrets.GC_PROJECT_ID }}/action-flow-service:$GITHUB_SHA
+              env:
+                  GC_PROJECT_ID: ${{ secrets.GC_PROJECT_ID }} # Updated to match your secret
 
-            # Step 10: Deploy to Cloud Run
+            # Deploy to Cloud Run
             - name: Deploy to Cloud Run
               run: |
                   gcloud run deploy action-flow-kh-service \
-                    --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA \
+                    --image gcr.io/${{ secrets.GC_PROJECT_ID }}/action-flow-service:$GITHUB_SHA \
                     --platform managed \
                     --region ${{ secrets.GC_REGION }} \
                     --service-account ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
