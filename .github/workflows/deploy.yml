@@ -1,4 +1,4 @@
-name: Deploy to Google Cloud Run
+name: Test and Deploy to Google Cloud Run
 
 on:
     push:
@@ -36,30 +36,35 @@ jobs:
               run: |
                   pnpm test
 
-            # Step 6: Set up Google Cloud SDK
-            - name: Set up Google Cloud SDK
-              uses: google-github-actions/setup-gcloud@v0
+            # Step 6: Authenticate to Google Cloud
+            - name: Authenticate to Google Cloud
+              uses: google-github-actions/auth@v1
               with:
-                  service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+                  credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+
+            # Step 7: Set up Google Cloud SDK
+            - name: Set up Google Cloud SDK
+              uses: google-github-actions/setup-gcloud@v1
+              with:
                   project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-            # Step 7: Configure Docker for Google Cloud Run
+            # Step 8: Configure Docker for Google Cloud Run
             - name: Configure Docker for Google Cloud Run
               run: |
                   gcloud auth configure-docker
 
-            # Step 8: Build and push Docker image to Google Container Registry
+            # Step 9: Build and push Docker image to Google Container Registry
             - name: Build and push Docker image
               run: |
                   docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA .
                   docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA
 
-            # Step 9: Deploy to Cloud Run
+            # Step 10: Deploy to Cloud Run
             - name: Deploy to Cloud Run
               run: |
                   gcloud run deploy action-flow-kh-service \
                     --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/action-flow-service:$GITHUB_SHA \
                     --platform managed \
-                    --region europe-north1 \
+                    --region ${{ secrets.GC_REGION }} \
                     --service-account ${{ secrets.GCP_SERVICE_ACCOUNT_EMAIL }} \
                     --no-allow-unauthenticated
