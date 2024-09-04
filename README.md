@@ -2,7 +2,7 @@
 
 ## Description
 
-A scalable, client-agnostic framework built with NestJS for executing modular actions in parallel or sequence. Designed with TypeScript for type safety, it leverages adapters to transform and process data efficiently across various clients, making it ideal for projects that require structured, maintainable, and flexible action handling.
+A NestJS framework for executing modular actions in parallel or sequence. Built with TypeScript for type safety, it uses adapters to process data efficiently across different clients, making it suitable for projects that need structured and flexible action handling.
 
 ## Project setup
 
