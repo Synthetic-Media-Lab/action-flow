@@ -1,6 +1,4 @@
-import { BaseError } from "./base.error"
-
-export class ValidationError extends BaseError {
+export class ValidationError extends Error {
     readonly type = "validation"
 
     constructor(message: string) {

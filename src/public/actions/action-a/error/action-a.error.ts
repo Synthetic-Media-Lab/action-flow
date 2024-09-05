@@ -1,6 +1,4 @@
-import { BaseError } from "src/error/base.error"
-
-export class ActionAError extends BaseError {
+export class ActionAError extends Error {
     readonly type = "action-a"
 
     constructor(message: string) {

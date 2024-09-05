@@ -1,6 +1,4 @@
-import { BaseError } from "./base.error"
-
-export class NotFoundError extends BaseError {
+export class NotFoundError extends Error {
     readonly type = "not-found"
 
     constructor(message: string) {

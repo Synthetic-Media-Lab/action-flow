@@ -40,7 +40,7 @@ export class ActionAService implements IActionA {
         })
     }
 
-    private async simulateAsyncOperation(
+    public async simulateAsyncOperation(
         ms: number = 500
     ): Promise<Result<void, ActionAAsyncError>> {
         return new Promise(resolve =>

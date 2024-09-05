@@ -1,0 +1,29 @@
+{
+    "moduleFileExtensions": ["js", "json", "ts"],
+    "rootDir": ".",
+    "testEnvironment": "node",
+    "testRegex": ".e2e-spec.ts$",
+    "transform": {
+        "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleDirectories": ["<rootDir>", "node_modules"],
+    "moduleNameMapper": {
+        "^src/(.*)$": "<rootDir>/src/$1"
+    },
+    "testPathIgnorePatterns": ["/node_modules/", "/dist/"],
+    "collectCoverageFrom": ["src/**/*.ts", "!src/private/**/*.resolver.ts"],
+    "coveragePathIgnorePatterns": [
+        ".*\\.module\\.ts$",
+        ".*\\.entity\\.ts$",
+        ".*\\.dto\\.ts$",
+        ".*\\.interface\\.ts$",
+        ".*\\.input\\.ts$",
+        ".*\\.config\\.(t|j)s$",
+        ".*\\.js$",
+        "/dist/",
+        "/coverage/",
+        "/node_modules/"
+    ],
+    "coverageDirectory": "./coverage",
+    "transformIgnorePatterns": ["node_modules/(?!(node-fetch)/)"]
+}

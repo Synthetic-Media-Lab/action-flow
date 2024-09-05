@@ -8,7 +8,7 @@
     "scripts": {
         "build": "nest build",
         "format": "prettier . --check",
-        "format:fix": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+        "format:fix": "prettier --write \"src/**/*.ts\"",
         "start": "nest start",
         "start:dev": "NODE_ENV=development nest start --watch",
         "start:debug": "nest start --debug --watch",
@@ -23,7 +23,7 @@
         "test:watch-all-verbose": "jest --watchAll --verbose",
         "test:cov": "jest --coverage",
         "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-        "test:e2e": "jest --config ./test/jest-e2e.json",
+        "test:e2e": "jest --config ./jest-e2e.json",
         "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky install; fi",
         "gc:push-prod": "./build-and-deploy-prod.sh"
     },
@@ -37,8 +37,7 @@
         "dotenv-cli": "^7.4.2",
         "pratica": "^2.3.0",
         "reflect-metadata": "^0.2.0",
-        "rxjs": "^7.8.1",
-        "zod": "^3.23.8"
+        "rxjs": "^7.8.1"
     },
     "devDependencies": {
         "@commitlint/cli": "^19.4.1",
@@ -76,16 +75,40 @@
             "json",
             "ts"
         ],
-        "rootDir": "src",
-        "testRegex": ".*\\.spec\\.ts$",
+        "rootDir": ".",
+        "moduleNameMapper": {
+            "^src/(.*)$": "<rootDir>/src/$1"
+        },
+        "testMatch": [
+            "**/?(*.)+(test|spec).ts"
+        ],
+        "testPathIgnorePatterns": [
+            ".*\\.e2e\\.ts$"
+        ],
         "transform": {
             "^.+\\.(t|j)s$": "ts-jest"
         },
         "collectCoverageFrom": [
-            "**/*.(t|j)s"
+            "src/**/*.ts",
+            "!src/private/**/*.resolver.ts"
         ],
-        "coverageDirectory": "../coverage",
-        "testEnvironment": "node"
+        "coveragePathIgnorePatterns": [
+            ".*\\.module\\.ts$",
+            ".*\\.entity\\.ts$",
+            ".*\\.dto\\.ts$",
+            ".*\\.interface\\.ts$",
+            ".*\\.input\\.ts$",
+            ".*\\.config\\.(t|j)s$",
+            ".*\\.js$",
+            "/dist/",
+            "/coverage/",
+            "/node_modules/"
+        ],
+        "coverageDirectory": "./coverage",
+        "testEnvironment": "node",
+        "transformIgnorePatterns": [
+            "node_modules/(?!(node-fetch)/)"
+        ]
     },
     "config": {
         "commitizen": {
