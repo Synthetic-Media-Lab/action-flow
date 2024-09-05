@@ -36,13 +36,14 @@ pnpm run test:e2e
 pnpm run test:cov
 ```
 
+## Deployment & CI/CD
+
+-   [CI/CD Pipeline Documentation](documentation/README.cicd-pipeline.md)
+
 ## Development workflow
 
--   [Development Workflow](documentation/README.development-workflow.md)
-
-## Development workflow: Google Cloud Identity Token
-
--   [Development Workflow Google Cloud Identity Token](documentation/README.development-workflow-gcloud-identity-token.md)
+-   [Development Workflow: Code & Commit Linting](documentation/README.development-workflow.md)
+-   [Development Workflow: Google Cloud Identity Token](documentation/README.development-workflow-gcloud-identity-token.md)
 
 ## Error Handling
 
