@@ -1,0 +1,37 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run concat_files_for_llm",
+            "type": "shell",
+            "command": "./llm-concat-script/concat_files_for_llm.sh",
+            "args": [
+                "-d",
+                "src/public/actions/action-a",
+                "-t",
+                "bash -c \"tree -a -I \\\"node_modules|dist|coverage|storybook-static|sanity|.git\\\" -L 5 | grep -v './public'\"",
+                "-o",
+                "llm_output.txt",
+                "-e",
+                "e2e",
+                "-p"
+            ],
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "options": {
+                "shell": {
+                    "executable": "/bin/zsh",
+                    "args": ["-l", "-c"]
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "focus": false,
+                "panel": "dedicated"
+            }
+        }
+    ]
+}

@@ -5,6 +5,7 @@ import { ConfigModule } from "@nestjs/config"
 import { resolve } from "path"
 import appConfig from "./app-config"
 import { ActionAModule } from "./public/actions/action-a/action-a.module"
+import { GoogleSheetModule } from './private/google-sheet/google-sheet.module';
 
 @Module({
     imports: [
@@ -15,7 +16,8 @@ import { ActionAModule } from "./public/actions/action-a/action-a.module"
                     ? resolve(__dirname, "../.env.test")
                     : resolve(__dirname, "../.env")
         }),
-        ActionAModule
+        ActionAModule,
+        GoogleSheetModule
     ],
     controllers: [AppController],
     providers: [AppService, ...appConfig],

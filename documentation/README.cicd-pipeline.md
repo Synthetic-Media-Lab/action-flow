@@ -2,6 +2,8 @@
 
 [← Back to Main Documentation](../README.md)
 
+![Screenshot](https://i.ibb.co/56zCWyF/Screenshot-2024-09-05-at-11-15-36.png)
+
 ## Overview
 
 This project uses **GitHub Actions** to automate the process of testing, building, and deploying your NestJS application to **Google Cloud Run**. The pipeline runs on every push to the `main` branch, ensuring that any changes to the codebase are tested and automatically deployed.
@@ -41,7 +43,7 @@ Before using the CI/CD pipeline, follow these steps:
     -   Artifact Registry Writer
     -   Logs Writer
     -   Storage Admin
-    -   Ensure the Service Account has the `iam.serviceAccounts.actAs` permission.
+    -   Service Account User. (To ensure the Service Account has the `iam.serviceAccounts.actAs` permission, so Github Actions interact with GCP.)
 
 ### 2. Add Secrets in GitHub
 

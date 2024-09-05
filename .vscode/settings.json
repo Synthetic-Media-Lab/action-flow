@@ -1,3 +1,6 @@
 {
-    "cSpell.words": ["Commitlint"]
+    "cSpell.words": ["Commitlint"],
+    "triggerTaskOnSave.tasks": {
+        "Run concat_files_for_llm": ["*"]
+    }
 }

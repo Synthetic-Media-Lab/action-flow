@@ -4,7 +4,7 @@ import request from "supertest"
 import { ActionAModule } from "./action-a.module"
 import { CreateActionADto } from "./dto/create-action-a.dto"
 import { ACTION_A_SERVICE_TOKEN } from "./action-a.providers"
-import { ActionAService } from "./action-a.service" // Optional if you need direct reference
+import { ActionAService } from "./action-a.service"
 import { Err, Ok } from "pratica"
 import { NotFoundError } from "src/error/not-found.error"
 
@@ -19,6 +19,7 @@ describe("ActionAController (e2e)", () => {
 
         service = moduleFixture.get<ActionAService>(ACTION_A_SERVICE_TOKEN)
         app = moduleFixture.createNestApplication()
+
         await app.init()
     })
 
