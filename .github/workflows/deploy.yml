@@ -40,6 +40,8 @@ jobs:
                   pnpm format:fix
 
             - name: Run tests
+              env:
+                  GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
               run: |
                   pnpm test
 
