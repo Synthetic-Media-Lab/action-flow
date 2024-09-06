@@ -1,14 +1,16 @@
 import {
     Controller,
     Get,
-    Param,
     HttpException,
     HttpStatus,
     Inject,
-    Logger
+    Logger,
+    Query
 } from "@nestjs/common"
 import { GOOGLE_SHEET_SERVICE_TOKEN } from "./google-sheet.providers"
 import { IGoogleSheet } from "./interface/IGoogleSheet"
+
+/* Please note: since this is a private module, this controller is only used during development. */
 
 @Controller("google-sheet")
 export class GoogleSheetController {
@@ -19,11 +21,30 @@ export class GoogleSheetController {
         private readonly googleSheetService: IGoogleSheet
     ) {}
 
-    @Get("fetch/:sheetId")
-    async fetchData(@Param("sheetId") sheetId: string): Promise<string[][]> {
-        this.logger.log(`Received request to fetch data from sheet: ${sheetId}`)
+    @Get("fetch")
+    async fetchData(
+        @Query("sheetId") sheetId: string,
+        @Query("sheetName") sheetName: string,
+        @Query("row") row?: number,
+        @Query("columnStart") columnStart?: string,
+        @Query("columnEnd") columnEnd?: string
+    ): Promise<string[][]> {
+        this.logger.log(
+            `Fetching data from Google Sheet with the following parameters: 
+            sheetId: ${sheetId}, 
+            sheetName: ${sheetName}, 
+            row: ${row}, 
+            columnStart: ${columnStart}, 
+            columnEnd: ${columnEnd}`
+        )
 
-        const result = await this.googleSheetService.fetchData(sheetId)
+        const result = await this.googleSheetService.fetchData(
+            sheetId,
+            sheetName,
+            row,
+            columnStart,
+            columnEnd
+        )
 
         return result.cata({
             Ok: data => data,

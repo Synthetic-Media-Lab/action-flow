@@ -7,14 +7,15 @@
             "command": "./llm-concat-script/concat_files_for_llm.sh",
             "args": [
                 "-d",
-                "src/public/actions/action-a",
+                "src/public/actions/action-a,src/private/google-sheet",
                 "-t",
-                "bash -c \"tree -a -I \\\"node_modules|dist|coverage|storybook-static|sanity|.git\\\" -L 5 | grep -v './public'\"",
+                "bash -c \"tree -a . -I \\\"node_modules|dist|coverage|storybook-static|sanity|.git\\\" -L 5 | grep -v './public'\"",
                 "-o",
                 "llm_output.txt",
                 "-e",
                 "e2e",
-                "-p"
+                "-p",
+                "package.json"
             ],
             "problemMatcher": [],
             "group": {

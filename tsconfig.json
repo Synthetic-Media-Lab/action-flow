@@ -18,7 +18,8 @@
         "forceConsistentCasingInFileNames": false,
         "noFallthroughCasesInSwitch": false,
         "downlevelIteration": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "allowJs": false
     },
     "include": ["src/**/*", ".jest", "commitlint.config.js"]
 }

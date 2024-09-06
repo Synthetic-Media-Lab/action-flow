@@ -3,6 +3,5 @@
     "tabWidth": 4,
     "semi": false,
     "singleQuote": false,
-    "arrowParens": "avoid",
-    "plugins": ["prettier-plugin-sh"]
+    "arrowParens": "avoid"
 }
