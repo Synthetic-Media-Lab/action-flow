@@ -2,5 +2,10 @@
     "cSpell.words": ["Commitlint"],
     "triggerTaskOnSave.tasks": {
         "Run concat_files_for_llm": ["*"]
+    },
+
+    "editor.formatOnSave": true,
+    "[shellscript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
     }
 }

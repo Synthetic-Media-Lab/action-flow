@@ -20,5 +20,5 @@
         "downlevelIteration": true,
         "esModuleInterop": true
     },
-    "include": ["src/**/*", "commitlint.config.js", ".jest"]
+    "include": ["src/**/*", ".jest", "commitlint.config.js"]
 }

@@ -11,10 +11,10 @@ GC_REGION=your-gcp-region
 
 # Deploy to Google Cloud Run
 gcloud run deploy action-flow \
-  --platform managed \
-  --region $GC_REGION \
-  --project $GC_PROJECT_ID \
-  --source .
+    --platform managed \
+    --region $GC_REGION \
+    --project $GC_PROJECT_ID \
+    --source .
 
 if [ $? -ne 0 ]; then
     echo "Cloud Run deployment failed."

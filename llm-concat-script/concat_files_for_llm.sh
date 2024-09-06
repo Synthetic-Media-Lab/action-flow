@@ -2,27 +2,24 @@
 
 # Function to show usage instructions
 show_help() { 
-  echo "Usage: $0 -d <directory> [-t <tree_command>] [-o <output_file>] [--include-package-json] [--exclude <pattern1,pattern2,...>] [--debug]"
+  echo "Usage: $0 -d <directory> [-t <tree_command>] [-o <output_file>] [-p <path_to_package_json>] [--package-json-path <path_to_package_json>] [--exclude <pattern1,pattern2,...>] [--debug]"
   echo
   echo "Options:"
-  echo "  -d, --directory              The directory to search files in (required)"
+  echo "  -d, --directory              The directory or comma-separated list of directories to search files in (required)"
   echo "  -t, --tree                   The tree command to show the project structure (optional)"
   echo "  -o, --output                 The file to write the output to (optional, default is stdout)"
-  echo "  -p, --include-package-json   Include package.json from the root directory in the output (optional)"
+  echo "  -p, --package-json-path      Specify the path to package.json to include in the output (optional)"
   echo "  -e, --exclude                Exclude files containing any of these comma-separated patterns in their name (optional)"
   echo "  --debug                      Enable debug mode for additional logging"
   echo "  -h, --help                   Display this help message"
 }
 
-# Get the script's directory and navigate to the project root
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR/.." || exit 1  # Go one level up to the project root
-
 # Initialize variables
 output=""
-include_package_json="false"
+package_json_path=""
 exclude_patterns=()
 debug_mode="false"
+directories=()
 
 # Function to handle debug output
 debug() {
@@ -38,13 +35,10 @@ while [[ "$#" -gt 0 ]]; do
             debug_mode="true"
             echo "Debug mode enabled"
             shift ;;
-        -p)
-            include_package_json="true"
-            echo "Include package.json set"
-            shift ;;
         -d)
-            directory="$2"
-            echo "Directory set to: $directory"
+            # Split comma-separated list into an array
+            IFS=',' read -ra directories <<< "$2"
+            echo "Directories set to: ${directories[*]}"
             shift 2 ;;
         -t)
             tree_command="$2"
@@ -53,6 +47,10 @@ while [[ "$#" -gt 0 ]]; do
         -o)
             output="$2"
             echo "Output file set to: $output"
+            shift 2 ;;
+        -p|--package-json-path)
+            package_json_path="$2"
+            echo "Package.json path set to: $package_json_path"
             shift 2 ;;
         -e)
             IFS=',' read -ra exclude_patterns <<< "$2"
@@ -68,16 +66,10 @@ while [[ "$#" -gt 0 ]]; do
     esac
 done
 
-# Check if the directory is provided
-if [ -z "$directory" ]; then
+# Check if at least one directory is provided
+if [ "${#directories[@]}" -eq 0 ]; then
   echo "Error: Directory is required."
   show_help
-  exit 1
-fi
-
-# Check if the directory exists
-if [ ! -d "$directory" ]; then
-  echo "Error: Directory does not exist."
   exit 1
 fi
 
@@ -118,50 +110,60 @@ if [ -n "$tree_command" ]; then
     exit 1
   fi
 
-  write_output "$tree_output"
-  write_output '"""'
+  write_output "$tree_output" 
+  write_output '"""' 
   write_output "\n"  # Add a newline after the tree structure
 fi
 
-# Include package.json contents if the flag is enabled
-if [ "$include_package_json" = "true" ]; then
-  package_file="$PWD/package.json"  # Look for package.json in the root of the project
-  debug "Looking for package.json at: $package_file"
-  if [ -f "$package_file" ]; then
+# Include package.json contents if the path is specified
+if [ -n "$package_json_path" ]; then
+  debug "Looking for package.json at: $package_json_path"
+  if [ -f "$package_json_path" ]; then
     write_output "package.json:"
     write_output '"""'
-    package_content=$(cat "$package_file")
+    package_content=$(cat "$package_json_path")
     write_output "$package_content"
     write_output '"""'
     write_output "\n"
   else
-    echo "Warning: package.json not found in the root directory."
+    echo "Warning: package.json not found at the specified path: $package_json_path"
   fi
 fi
 
-# Recursively find all files in the directory and concatenate the content
-find "$directory" -type f -print0 | while IFS= read -r -d '' file; do
-  debug "Processing file: $file"
+# Process each directory
+for directory in "${directories[@]}"; do
+  debug "Processing directory: $directory"
   
-  # Exclude files that match any of the exclude patterns
-  for pattern in "${exclude_patterns[@]}"; do
-    if [[ "$file" == *"$pattern"* ]]; then
-      debug "Skipping file: $file (matched exclude pattern: $pattern)"
-      continue 2  # Skip this file and move to the next one 
+  # Check if the directory exists
+  if [ ! -d "$directory" ]; then
+    echo "Error: Directory '$directory' does not exist."
+    exit 1
+  fi
+
+  # Recursively find all files in the directory and concatenate the content
+  find "$directory" -type f -print0 | while IFS= read -r -d '' file; do
+    debug "Processing file: $file"
+    
+    # Exclude files that match any of the exclude patterns
+    for pattern in "${exclude_patterns[@]}"; do
+      if [[ "$file" == *"$pattern"* ]]; then
+        debug "Skipping file: $file (matched exclude pattern: $pattern)"
+        continue 2  # Skip this file and move to the next one 
+      fi
+    done
+
+    # Check if the file is readable (skip binary files)
+    if file "$file" | grep -q text; then
+      debug "Including file: $file"
+      # Print the file name, the """ boundary, and then the content
+      write_output "$file:"
+      write_output '"""'
+      file_content=$(cat "$file")
+      write_output "$file_content"
+      write_output '"""'
+      write_output "\n"  # Add a newline between sections for better readability
+    else
+      debug "Skipping non-text file: $file"
     fi
   done
-
-  # Check if the file is readable (skip binary files)
-  if file "$file" | grep -q text; then
-    debug "Including file: $file"
-    # Print the file name, the """ boundary, and then the content
-    write_output "$file:"
-    write_output '"""'
-    file_content=$(cat "$file")
-    write_output "$file_content"
-    write_output '"""'
-    write_output "\n"  # Add a newline between sections for better readability
-  else
-    debug "Skipping non-text file: $file"
-  fi
 done

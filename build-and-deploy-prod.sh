@@ -15,13 +15,13 @@ trap cleanup EXIT
 echo "Deploying to Cloud Run [PROD] ..."
 
 gcloud run deploy action-flow-kh \
-  --platform managed \
-  --region $GC_REGION \
-  --project $GC_PROJECT_ID \
-  --service-account af-kh-service-acc-prod@action-flow-kh.iam.gserviceaccount.com \
-  --source . \
-  --no-allow-unauthenticated
-  
+    --platform managed \
+    --region $GC_REGION \
+    --project $GC_PROJECT_ID \
+    --service-account af-kh-service-acc-prod@action-flow-kh.iam.gserviceaccount.com \
+    --source . \
+    --no-allow-unauthenticated
+
 if [ $? -ne 0 ]; then
     echo "Cloud Run deployment failed."
     exit 1
