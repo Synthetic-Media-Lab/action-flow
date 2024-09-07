@@ -110,6 +110,9 @@
         "testEnvironment": "node",
         "transformIgnorePatterns": [
             "node_modules/(?!(node-fetch)/)"
+        ],
+        "setupFiles": [
+            "<rootDir>/.jest/set-env-vars.ts"
         ]
     },
     "config": {

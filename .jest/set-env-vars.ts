@@ -1,8 +1,6 @@
-PORT=3000
+console.log("setEnvVars.ts is loaded")
 
-# Project Specific  
-
-GCP_SERVICE_ACCOUNT_KEY='{
+process.env.GCP_SERVICE_ACCOUNT_KEY = JSON.stringify({
     type: "service_account",
     project_id: "mock-project-id",
     private_key_id: "mock-private-key-id",
@@ -15,4 +13,4 @@ GCP_SERVICE_ACCOUNT_KEY='{
     auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
     client_x509_cert_url:
         "https://www.googleapis.com/robot/v1/metadata/x509/mock-email@mock-project.iam.gserviceaccount.com"
-}'
+})

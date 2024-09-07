@@ -42,11 +42,7 @@ describe("GoogleSheetService", () => {
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
-            imports: [
-                ConfigModule.forRoot({
-                    envFilePath: ".env.test"
-                })
-            ],
+            imports: [ConfigModule],
             providers: [GoogleSheetService]
         }).compile()
 
@@ -55,7 +51,7 @@ describe("GoogleSheetService", () => {
 
     describe("fetchData", () => {
         it("should return data when valid inputs are provided", async () => {
-            console.log("ENV", process.env.GCP_SERVICE_ACCOUNT_KEY)
+            console.log("ENV1", process.env.GCP_SERVICE_ACCOUNT_KEY)
             const sheetId = "valid-sheet-id"
             const sheetName = "MockSheet"
             const mockData = [
@@ -115,6 +111,7 @@ describe("GoogleSheetService", () => {
         })
 
         it("should fetch data with dynamic columns and rows", async () => {
+            console.log("ENV", process.env.GCP_SERVICE_ACCOUNT_KEY)
             const sheetId = "valid-sheet-id"
             const sheetName = "MockSheet"
             const mockData = [["Row 5 Data 1", "Row 5 Data 2", "Row 5 Data 3"]]
