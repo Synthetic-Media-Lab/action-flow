@@ -1,4 +1,4 @@
-import { ConfigModule } from "@nestjs/config"
+import { ConfigModule, ConfigService } from "@nestjs/config"
 import { Test, TestingModule } from "@nestjs/testing"
 import { google } from "googleapis"
 import { Result } from "pratica"
@@ -33,6 +33,7 @@ jest.mock("googleapis", () => {
 
 describe("GoogleSheetService", () => {
     let service: GoogleSheetService
+    let configService: ConfigService
 
     beforeAll(() => {
         global.fetch = jest.fn(() => {
@@ -47,11 +48,15 @@ describe("GoogleSheetService", () => {
         }).compile()
 
         service = module.get<GoogleSheetService>(GoogleSheetService)
+        configService = module.get<ConfigService>(ConfigService)
+    })
+
+    afterEach(() => {
+        jest.restoreAllMocks()
     })
 
     describe("fetchData", () => {
         it("should return data when valid inputs are provided", async () => {
-            console.log("ENV1", process.env.GCP_SERVICE_ACCOUNT_KEY)
             const sheetId = "valid-sheet-id"
             const sheetName = "MockSheet"
             const mockData = [
@@ -71,7 +76,7 @@ describe("GoogleSheetService", () => {
             expect(result.isOk()).toBe(true)
 
             result.map(data => {
-                expect(data).toEqual([...mockData]) // Ensuring immutability by checking copy
+                expect(data).toEqual([...mockData])
             })
         })
 
@@ -95,7 +100,7 @@ describe("GoogleSheetService", () => {
         })
 
         it("should return an error when the Google Cloud Platform service account key is missing", async () => {
-            delete process.env.GCP_SERVICE_ACCOUNT_KEY
+            jest.spyOn(configService, "get").mockReturnValueOnce(undefined)
 
             const sheetId = "valid-sheet-id"
             const sheetName = "MockSheet"
@@ -111,7 +116,6 @@ describe("GoogleSheetService", () => {
         })
 
         it("should fetch data with dynamic columns and rows", async () => {
-            console.log("ENV", process.env.GCP_SERVICE_ACCOUNT_KEY)
             const sheetId = "valid-sheet-id"
             const sheetName = "MockSheet"
             const mockData = [["Row 5 Data 1", "Row 5 Data 2", "Row 5 Data 3"]]
@@ -123,12 +127,12 @@ describe("GoogleSheetService", () => {
             })
 
             const result: Result<string[][], GoogleSheetError> =
-                await service.fetchData(sheetId, sheetName, 5, "B", "D") // Fetch specific range
+                await service.fetchData(sheetId, sheetName, 5, "B", "D")
 
             expect(result.isOk()).toBe(true)
 
             result.map(data => {
-                expect(data).toEqual([...mockData]) // Ensuring immutability by checking copy
+                expect(data).toEqual([...mockData])
             })
         })
     })
