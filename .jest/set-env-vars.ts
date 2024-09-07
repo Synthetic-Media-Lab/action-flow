@@ -1,5 +1,3 @@
-console.log("setEnvVars.ts is loaded")
-
 process.env.GCP_SERVICE_ACCOUNT_KEY = JSON.stringify({
     type: "service_account",
     project_id: "mock-project-id",

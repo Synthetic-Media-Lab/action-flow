@@ -43,6 +43,7 @@ Before using the CI/CD pipeline, follow these steps:
     -   Artifact Registry Writer
     -   Logs Writer
     -   Storage Admin
+    -   Secret Manager Secret Accessor
     -   Service Account User. (To ensure the Service Account has the `iam.serviceAccounts.actAs` permission, so Github Actions interact with GCP.)
 
 ### 2. Add Secrets in GitHub

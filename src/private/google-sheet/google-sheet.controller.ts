@@ -5,7 +5,9 @@ import {
     HttpStatus,
     Inject,
     Logger,
-    Query
+    Query,
+    UsePipes,
+    ValidationPipe
 } from "@nestjs/common"
 import { GOOGLE_SHEET_SERVICE_TOKEN } from "./google-sheet.providers"
 import { IGoogleSheet } from "./interface/IGoogleSheet"
@@ -22,6 +24,7 @@ export class GoogleSheetController {
     ) {}
 
     @Get("fetch")
+    @UsePipes(new ValidationPipe())
     async fetchData(
         @Query("sheetId") sheetId: string,
         @Query("sheetName") sheetName: string,

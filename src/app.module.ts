@@ -5,6 +5,7 @@ import { AppController } from "./app.controller"
 import { AppService } from "./app.service"
 import { GoogleSheetModule } from "./private/google-sheet/google-sheet.module"
 import { ActionAModule } from "./public/actions/action-a/action-a.module"
+import { AIModule } from "./private/ai/ai.module"
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import { ActionAModule } from "./public/actions/action-a/action-a.module"
             isGlobal: true
         }),
         ActionAModule,
+        AIModule,
         GoogleSheetModule
     ],
     controllers: [AppController],

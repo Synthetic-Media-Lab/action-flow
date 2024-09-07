@@ -36,6 +36,7 @@
         "class-validator": "^0.14.1",
         "dotenv-cli": "^7.4.2",
         "googleapis": "^144.0.0",
+        "openai": "^4.58.1",
         "pratica": "^2.3.0",
         "reflect-metadata": "^0.2.0",
         "rxjs": "^7.8.1"
