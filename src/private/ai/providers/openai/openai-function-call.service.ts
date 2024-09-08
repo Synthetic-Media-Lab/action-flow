@@ -1,35 +1,40 @@
 import { Injectable, Logger } from "@nestjs/common"
+import OpenAI from "openai"
 import { Err, Just, Maybe, Nothing, Ok, Result } from "pratica"
-import { AIError } from "../ai/error/ai.error"
-import { functionHandlers } from "./function-handlers"
-import { AIGenericResponse, ToolCall } from "../ai/interface/IAI"
+import { functionHandlers } from "../../ai-function-call/function-handlers"
+import { AIError } from "../../error/ai.error"
+import { AIGenericResponse, ToolCall } from "../../interface/IAI"
 
 @Injectable()
-export class AIFunctionCallService {
-    private readonly logger = new Logger(AIFunctionCallService.name)
+export class OpenAIFunctionCallService {
+    private readonly logger = new Logger(OpenAIFunctionCallService.name)
 
     /**
      * Handles the function call from AI response using the appropriate handler.
      * @param toolCall - The tool call extracted from AI response.
      * @returns Result containing either the structured response or an AIError.
      */
-    public async handleFunctionCall<TArgs>(
-        toolCall: ToolCall<TArgs>
-    ): Promise<Result<AIGenericResponse<string, TArgs>, AIError>> {
+    public async handleFunctionCall(
+        toolCall: ToolCall<unknown>
+    ): Promise<
+        Result<
+            AIGenericResponse<OpenAI.Chat.Completions.ChatCompletion, unknown>,
+            AIError
+        >
+    > {
         try {
-            const handler = functionHandlers[toolCall?.function?.name]
-
+            const handler = functionHandlers[toolCall.function.name]
             this.logger.debug(
-                `Looking up handler for function: ${toolCall?.function?.name}`
+                `Looking up handler for function: ${toolCall.function.name}`
             )
 
             if (!handler) {
                 this.logger.error(
-                    `No handler found for function: ${toolCall?.function?.name}`
+                    `No handler found for function: ${toolCall.function.name}`
                 )
                 return Err(
                     new AIError(
-                        `No handler found for ${toolCall?.function?.name}`
+                        `No handler found for ${toolCall.function.name}`
                     )
                 )
             }
@@ -48,7 +53,9 @@ export class AIFunctionCallService {
                         `Function call successful with result: ${result}`
                     )
                     return Ok({
-                        rawResponse: result,
+                        rawResponse: {
+                            choices: [{ message: { content: result } }]
+                        } as OpenAI.Chat.Completions.ChatCompletion,
                         generatedText: result,
                         toolCall: toolCall
                     })
@@ -65,36 +72,33 @@ export class AIFunctionCallService {
     }
 
     /**
-     * Attempts to parse a tool call from the AI response if available.
-     * The response is expected to be a JSON string. If it's plain text or
-     * does not contain a valid tool call, the method will return Nothing
-     * without logging an error.
-     *
-     * @param response - The AI-generated response in string format.
+     * Parses tool call from the AI-generated response.
+     * @param response - The AI-generated response.
      * @returns Maybe type containing the ToolCall or Nothing if no tool call is found.
      */
-    public parseToolCall<TArgs>(response: string): Maybe<ToolCall<TArgs>> {
+    public parseToolCall(
+        response: OpenAI.Chat.Completions.ChatCompletion
+    ): Maybe<ToolCall<unknown>> {
         try {
-            this.logger.debug(`Parsing tool call from response: ${response}`)
+            this.logger.debug(
+                `Parsing tool call from response: ${JSON.stringify(response, null, 2)}`
+            )
 
-            const parsedResponse = JSON.parse(response)
+            const functionCall = response?.choices?.[0]?.message?.function_call
 
-            const toolCall = parsedResponse?.tool_calls?.[0]
-
-            if (toolCall) {
-                this.logger.debug(
-                    `Tool call found: ${JSON.stringify(toolCall)}`
-                )
-                return Just(toolCall)
+            if (functionCall) {
+                return Just({
+                    function: {
+                        name: functionCall.name,
+                        arguments: JSON.parse(functionCall.arguments)
+                    }
+                })
             } else {
-                this.logger.debug(`No tool call found in response.`)
+                this.logger.debug(`No function call found in response.`)
                 return Nothing
             }
         } catch (error) {
-            this.logger.debug(
-                `No valid tool call detected, likely a plain text response.`
-            )
-
+            this.logger.error(`Error parsing function call: ${error.message}`)
             return Nothing
         }
     }

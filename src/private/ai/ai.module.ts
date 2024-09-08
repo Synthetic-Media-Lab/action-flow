@@ -1,17 +1,13 @@
-import { forwardRef, Module } from "@nestjs/common"
+import { Module } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
-import { AIFunctionCallModule } from "../ai-function-call/ai-function-call.module"
 import { AIController } from "./ai.controller"
 import { AI_SERVICE_TOKEN, aIServiceProvider } from "./ai.provider"
-import {
-    AI_MODEL_TOKEN,
-    openAIModelProvider
-} from "./providers/openai/openai.model.provider"
+import { OpenAIFunctionCallService } from "./providers/openai/openai-function-call.service"
 
 @Module({
-    imports: [ConfigModule, forwardRef(() => AIFunctionCallModule)],
+    imports: [ConfigModule],
     controllers: [AIController],
-    providers: [aIServiceProvider, openAIModelProvider],
-    exports: [AI_SERVICE_TOKEN, AI_MODEL_TOKEN]
+    providers: [aIServiceProvider, OpenAIFunctionCallService],
+    exports: [AI_SERVICE_TOKEN]
 })
 export class AIModule {}

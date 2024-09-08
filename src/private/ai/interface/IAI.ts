@@ -20,28 +20,23 @@ export type AIGenericResponse<T = unknown, TArgs = unknown> = {
     toolCall?: ToolCall<TArgs>
 }
 
-/* export interface IGenerateText<T = unknown, TArgs = unknown> {
+export interface IGenerateText<TCompletion = unknown> {
     generateText(
-        prompt: string,
+        input: string | TCompletion,
         options?: AICustomOptions
-    ): Promise<Result<AIGenericResponse<T, TArgs>, AIError>>
+    ): Promise<Result<AIGenericResponse<TCompletion>, AIError>>
 }
 
-export interface IGenerateTextWithTools<T = unknown, TArgs = unknown> {
+export interface IGenerateTextWithTools<
+    TCompletion = unknown,
+    TArgs = unknown
+> {
     generateTextWithTools(
-        prompt: string,
+        input: string | TCompletion,
         options?: AICustomOptions
-    ): Promise<Result<AIGenericResponse<T, TArgs>, AIError>>
-} */
-
-export interface IAI<T, TArgs> {
-    generateText(
-        prompt: string,
-        options?: AICustomOptions
-    ): Promise<Result<AIGenericResponse<T, TArgs>, AIError>>
-
-    generateTextWithTools(
-        prompt: string,
-        options?: AICustomOptions
-    ): Promise<Result<AIGenericResponse<T, TArgs>, AIError>>
+    ): Promise<Result<AIGenericResponse<TCompletion, TArgs>, AIError>>
 }
+
+export interface IAI<TCompletion = unknown, TArgs = unknown>
+    extends IGenerateText<TCompletion>,
+        IGenerateTextWithTools<TCompletion, TArgs> {}

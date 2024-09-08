@@ -26,7 +26,12 @@ export const getWeatherHandler: IAIFunctionCall<GetWeatherArgs> = {
             const currentWeather = weatherData.current_weather
 
             return Ok(
-                `The current temperature at latitude ${latitude}, longitude ${longitude} is ${currentWeather.temperature}°C with ${currentWeather.weathercode}.`
+                JSON.stringify({
+                    latitude,
+                    longitude,
+                    temperature: currentWeather.temperature,
+                    weatherCode: currentWeather.weathercode
+                })
             )
         } catch (error) {
             return Err(new AIError("Error retrieving weather data"))

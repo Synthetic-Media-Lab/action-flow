@@ -20,7 +20,7 @@ export class AIController {
 
     constructor(
         @Inject(AI_SERVICE_TOKEN)
-        private readonly aiService: IAI<unknown, unknown>
+        private readonly aiService: IAI
     ) {}
 
     @Post("generate-text")
@@ -41,6 +41,8 @@ export class AIController {
             temperature,
             maxTokens
         })
+
+        this.logger.debug(`Result: ${JSON.stringify(result, null, 2)}`)
 
         return result.cata({
             Ok: (response: AIGenericResponse<unknown, unknown>) => {
@@ -72,6 +74,8 @@ export class AIController {
             temperature,
             maxTokens
         })
+
+        this.logger.debug(`Result: ${JSON.stringify(result, null, 2)}`)
 
         return result.cata({
             Ok: (response: AIGenericResponse<unknown, unknown>) => {

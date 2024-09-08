@@ -4,8 +4,8 @@ import { AIError } from "../../error/ai.error"
 import OpenAI from "openai"
 import { ConfigService } from "@nestjs/config"
 import { AICustomOptions, AIGenericResponse, IAI } from "../../interface/IAI"
-import { AIFunctionCallService } from "src/private/ai-function-call/ai-function-call.service"
-import { getWeatherSchema } from "src/private/ai-function-call/function-definitions/get-weather.schema"
+import { OpenAIFunctionCallService } from "./openai-function-call.service"
+import { getWeatherSchema } from "../../ai-function-call/function-definitions/get-weather.schema"
 
 @Injectable()
 export class OpenAIService
@@ -17,7 +17,7 @@ export class OpenAIService
 
     constructor(
         private readonly configService: ConfigService,
-        private readonly aiFunctionCallService: AIFunctionCallService
+        private readonly aiFunctionCallService: OpenAIFunctionCallService
     ) {
         const apiKey = this.configService.get<string>("OPENAI_API_KEY")
         this.model = this.configService.get<string>("OPENAI_MODEL")
@@ -32,42 +32,43 @@ export class OpenAIService
             throw new Error("OpenAI model is missing")
         }
 
-        this.openai = new OpenAI({
-            apiKey
-        })
+        this.openai = new OpenAI({ apiKey })
     }
 
     public async generateText(
-        prompt: string,
+        input: string | OpenAI.Chat.Completions.ChatCompletion,
         options: AICustomOptions = {}
     ): Promise<
         Result<
-            AIGenericResponse<OpenAI.Chat.Completions.ChatCompletion, unknown>,
+            AIGenericResponse<OpenAI.Chat.Completions.ChatCompletion>,
             AIError
         >
     > {
         const {
             systemMessage = "You are a helpful assistant.",
             temperature = 0.7,
-            maxTokens = 100
+            maxTokens = 4096
         } = options
 
         try {
-            const completion = await this.openai.chat.completions.create({
-                model: this.model,
-                messages: [
-                    { role: "system", content: systemMessage },
-                    { role: "user", content: prompt }
-                ],
-                temperature,
-                max_tokens: maxTokens
-            })
+            const completion =
+                typeof input === "string"
+                    ? await this.openai.chat.completions.create({
+                          model: this.model,
+                          messages: [
+                              { role: "system", content: systemMessage },
+                              { role: "user", content: input }
+                          ],
+                          temperature,
+                          max_tokens: maxTokens
+                      })
+                    : input
 
             this.logger.debug(
-                `Chat completion: ${JSON.stringify(completion, null, 2)}`
+                `[generateText] Chat completion: ${JSON.stringify(completion, null, 2)}`
             )
 
-            const message = completion.choices[0]?.message?.content || ""
+            const message = completion?.choices?.[0]?.message?.content || ""
 
             return Ok({
                 rawResponse: completion,
@@ -75,13 +76,12 @@ export class OpenAIService
             })
         } catch (error) {
             this.logger.error(`Failed to generate text: ${error.message}`)
-
             return Err(new AIError("Failed to generate text using OpenAI"))
         }
     }
 
     public async generateTextWithTools(
-        prompt: string,
+        input: string | OpenAI.Chat.Completions.ChatCompletion,
         options: AICustomOptions = {}
     ): Promise<
         Result<
@@ -96,37 +96,86 @@ export class OpenAIService
         } = options
 
         try {
-            const completion = await this.openai.chat.completions.create({
-                model: this.model,
-                messages: [
-                    { role: "system", content: systemMessage },
-                    { role: "user", content: prompt }
-                ],
-                temperature,
-                max_tokens: maxTokens,
-                functions: [getWeatherSchema],
-                function_call: "auto"
-            })
+            const completion =
+                typeof input === "string"
+                    ? await this.openai.chat.completions.create({
+                          model: this.model,
+                          messages: [
+                              { role: "system", content: systemMessage },
+                              { role: "user", content: input }
+                          ],
+                          temperature,
+                          max_tokens: maxTokens,
+                          functions: [getWeatherSchema],
+                          function_call: "auto"
+                      })
+                    : input
 
             this.logger.debug(
-                `Chat completion: ${JSON.stringify(completion, null, 2)}`
+                `[generateTextWithTools] Chat completion: ${JSON.stringify(completion, null, 2)}`
             )
 
-            const message = completion.choices[0]?.message?.content || ""
+            const message = completion?.choices?.[0]?.message?.content || ""
 
-            const toolCall = this.aiFunctionCallService.parseToolCall(message)
+            const toolCall =
+                this.aiFunctionCallService.parseToolCall(completion)
 
-            return Ok({
-                rawResponse: completion,
-                generatedText: message,
-                toolCall: toolCall.cata({
-                    Just: toolCall => toolCall,
-                    Nothing: () => undefined
-                })
+            return toolCall.cata({
+                Just: async toolCall => {
+                    this.logger.debug(
+                        `[generateTextWithTools] Tool call detected: ${toolCall.function.name}`
+                    )
+
+                    const functionCallResult =
+                        await this.aiFunctionCallService.handleFunctionCall(
+                            toolCall
+                        )
+
+                    return functionCallResult.cata({
+                        Ok: async value => {
+                            this.logger.debug(
+                                `[generateTextWithTools] Function call successful, structured data: ${value.generatedText}`
+                            )
+
+                            const summaryResult = await this.generateText(
+                                `Here is the data: ${value.generatedText}. Summarize this information in a concise, human-friendly way.`,
+                                {
+                                    systemMessage:
+                                        "Summarize the following data in a simple, human-friendly manner.",
+                                    temperature,
+                                    maxTokens
+                                }
+                            )
+
+                            return summaryResult
+                        },
+                        Err: err => {
+                            this.logger.error(
+                                `[generateTextWithTools] Function call failed: ${err.message}`
+                            )
+                            return Err(
+                                new AIError(
+                                    `Function call failed: ${err.message}`
+                                )
+                            )
+                        }
+                    })
+                },
+                Nothing: () => {
+                    this.logger.debug(
+                        "[generateTextWithTools] No tool call detected"
+                    )
+                    return Ok({
+                        rawResponse: completion,
+                        generatedText: message,
+                        toolCall: undefined
+                    })
+                }
             })
         } catch (error) {
-            this.logger.error(`Failed to generate text: ${error.message}`)
-
+            this.logger.error(
+                `[generateTextWithTools] Failed to generate text: ${error.message}`
+            )
             return Err(new AIError("Failed to generate text using OpenAI"))
         }
     }
