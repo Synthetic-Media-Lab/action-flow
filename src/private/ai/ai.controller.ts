@@ -1,17 +1,18 @@
 import {
-    Controller,
-    Post,
     Body,
+    Controller,
     HttpException,
     Inject,
     Logger,
-    ValidationPipe,
-    UsePipes
+    Post,
+    UsePipes,
+    ValidationPipe
 } from "@nestjs/common"
+import { AI_SERVICE_TOKEN } from "./ai.provider"
+import { CreateAICustomPromptDto } from "./dto/create-ai-prompt.dto"
+import { AIGenericResponse, IAI } from "./interface/IAI"
 import { Result } from "pratica"
-import { CreateAIPromptDto } from "./dto/create-ai-prompt.dto"
-import { IAI } from "./interface/IAI"
-import { AI_SERVICE_TOKEN } from "./ai.providers"
+import { AIError } from "./error/ai.error"
 
 @Controller("ai")
 export class AIController {
@@ -19,25 +20,66 @@ export class AIController {
 
     constructor(
         @Inject(AI_SERVICE_TOKEN)
-        private readonly aiService: IAI
+        private readonly aiService: IAI<unknown, unknown>
     ) {}
 
     @Post("generate-text")
     @UsePipes(new ValidationPipe())
     async generateText(
-        @Body() createAIPromptDto: CreateAIPromptDto
+        @Body() createAICustomPromptDto: CreateAICustomPromptDto
     ): Promise<string> {
-        const { prompt } = createAIPromptDto
+        const { prompt, systemMessage, temperature, maxTokens } =
+            createAICustomPromptDto
 
-        this.logger.log(`Received prompt: ${prompt}`)
+        this.logger.debug(`Received prompt: ${prompt}`)
 
-        const result: Result<string, Error> =
-            await this.aiService.generateText(prompt)
+        const result: Result<
+            AIGenericResponse<unknown, unknown>,
+            AIError
+        > = await this.aiService.generateText(prompt, {
+            systemMessage,
+            temperature,
+            maxTokens
+        })
 
         return result.cata({
-            Ok: (text: string) => text,
-            Err: (error: Error) => {
+            Ok: (response: AIGenericResponse<unknown, unknown>) => {
+                return response.generatedText || "No text generated."
+            },
+            Err: (error: AIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
+
+                throw new HttpException(error.message, 500)
+            }
+        })
+    }
+
+    @Post("generate-text-with-tools")
+    @UsePipes(new ValidationPipe())
+    async generateTextWithTools(
+        @Body() createAICustomPromptDto: CreateAICustomPromptDto
+    ): Promise<string> {
+        const { prompt, systemMessage, temperature, maxTokens } =
+            createAICustomPromptDto
+
+        this.logger.debug(`Received prompt: ${prompt}`)
+
+        const result: Result<
+            AIGenericResponse<unknown, unknown>,
+            AIError
+        > = await this.aiService.generateTextWithTools(prompt, {
+            systemMessage,
+            temperature,
+            maxTokens
+        })
+
+        return result.cata({
+            Ok: (response: AIGenericResponse<unknown, unknown>) => {
+                return response.generatedText || "No text generated."
+            },
+            Err: (error: AIError) => {
+                this.logger.error(`Failed to generate text: ${error.message}`)
+
                 throw new HttpException(error.message, 500)
             }
         })

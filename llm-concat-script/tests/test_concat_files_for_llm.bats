@@ -107,3 +107,25 @@ SCRIPT_PATH="./concat_files_for_llm.sh"
     rm -r temp_test_dir
     rm output.txt
 }
+
+# Test if files matching multiple comma-separated exclude patterns are excluded
+@test "Excludes files based on multiple comma-separated patterns" {
+    mkdir -p temp_test_dir
+    echo "test file content" > temp_test_dir/test.txt
+    echo "spec file content" > temp_test_dir/test.spec.txt
+    echo "log file content" > temp_test_dir/test.log.txt
+    
+    # Run the script with exclude patterns "spec,log"
+    run bash "$SCRIPT_PATH" -d temp_test_dir -o output.txt -e "spec,log"
+    [ "$status" -eq 0 ]
+    
+    [ -f output.txt ]
+    
+    # The "test.txt" file should be included, but "test.spec.txt" and "test.log.txt" should be excluded
+    grep "test file content" output.txt
+    ! grep "spec file content" output.txt
+    ! grep "log file content" output.txt
+    
+    rm -r temp_test_dir
+    rm output.txt
+}
