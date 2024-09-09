@@ -1,7 +1,18 @@
-import { CoreMessage, CoreTool, GenerateTextResult, LanguageModel } from "ai"
+import {
+    CoreAssistantMessage,
+    CoreMessage,
+    CoreTool,
+    CoreToolMessage,
+    GenerateTextResult,
+    LanguageModel
+} from "ai"
 import { Result } from "pratica"
 import { GenAIError } from "../error/gen-ai.error"
 import { CallSettings } from "../types/types"
+
+export type GenerateTextResponse =
+    | (CoreAssistantMessage | CoreToolMessage)[]
+    | { message: string }
 
 export interface IGenerateText<TOOLS extends Record<string, CoreTool>> {
     generateText(

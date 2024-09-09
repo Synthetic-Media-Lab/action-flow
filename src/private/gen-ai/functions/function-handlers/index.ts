@@ -9,3 +9,5 @@ export const functionHandlersProvider = {
     provide: "FUNCTION_HANDLERS",
     useValue: functionHandlers
 }
+
+export type FunctionTools = typeof functionHandlers

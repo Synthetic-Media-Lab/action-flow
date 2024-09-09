@@ -10,19 +10,15 @@ import {
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
+import { CoreMessage, GenerateTextResult } from "ai"
 import { Result } from "pratica"
+import { SystemMessage } from "./decorators/system-message.decorator"
 import { CreateAICustomPromptDto } from "./dto/create-ai-prompt.dto"
 import { GenAIError } from "./error/gen-ai.error"
+import { FunctionTools } from "./functions/function-handlers"
 import { GEN_AI_SERVICE_TOKEN } from "./gen-ai.provider"
-import { IGenAI } from "./interface/gen-ai.interface"
-import { CoreMessage, GenerateTextResult } from "ai"
-import { getWeatherTool } from "./functions/function-handlers/get-weather.handler"
 import { EnforceServerSystemMessageGuard } from "./guards/enforce-server-system-message.guard"
-import { SystemMessage } from "./decorators/system-message.decorator"
-
-type AITools = {
-    getWeather: typeof getWeatherTool
-}
+import { GenerateTextResponse, IGenAI } from "./interface/gen-ai.interface"
 
 interface AIRequestBody {
     system?: string
@@ -34,17 +30,17 @@ export class AIController {
 
     constructor(
         @Inject(GEN_AI_SERVICE_TOKEN)
-        private readonly genAIService: IGenAI<AITools>
+        private readonly genAIService: IGenAI<FunctionTools>
     ) {}
 
     @Post("generate-text")
     @UseGuards(EnforceServerSystemMessageGuard)
-    @SystemMessage("Pretend you are a tiger 🐯.")
+    @SystemMessage("You are a helpful ActionFlow assistant")
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     async generateText(
         @Body() createAICustomPromptDto: CreateAICustomPromptDto,
         @Req() req: { body: AIRequestBody }
-    ): Promise<string> {
+    ): Promise<GenerateTextResponse> {
         this.logger.debug(
             `Received body: ${JSON.stringify(createAICustomPromptDto, null, 2)}`
         )
@@ -58,19 +54,23 @@ export class AIController {
         )
 
         const result: Result<
-            GenerateTextResult<AITools>,
+            GenerateTextResult<FunctionTools>,
             GenAIError
         > = await this.genAIService.generateText(updatedMessages)
 
-        this.logger.debug(`Result: ${JSON.stringify(result, null, 2)}`)
-
         return result.cata({
-            Ok: (response: GenerateTextResult<AITools>) => {
-                const generatedText = response.text || "No text generated."
-                return generatedText
+            Ok: (response: GenerateTextResult<FunctionTools>) => {
+                this.logger.debug(
+                    `Result: ${JSON.stringify(response.responseMessages, null, 2)}`
+                )
+
+                return response.responseMessages.length > 0
+                    ? response.responseMessages
+                    : { message: "No text generated." }
             },
             Err: (error: GenAIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
+
                 throw new HttpException(error.message, 500)
             }
         })
@@ -89,6 +89,7 @@ export class AIController {
                 role: "system",
                 content: this.getSystemMessageFromGuardOrDefault(req)
             }
+
             return [systemMessage, ...messages]
         }
 

@@ -35,7 +35,7 @@ export class EnforceServerSystemMessageGuard implements CanActivate {
 
         if (!systemMessage) {
             throw new HttpException(
-                "[EnforceServerSystemMessageGuard] System message configuration missing.",
+                "[EnforceServerSystemMessageGuard] System message configuration missing. Add a @SystemMessage decorator to the controller.",
                 500
             )
         }

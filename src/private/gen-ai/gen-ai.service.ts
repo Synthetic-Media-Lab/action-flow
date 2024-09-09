@@ -63,16 +63,20 @@ export class GenAIService<TOOLS extends Record<string, CoreTool>>
                 maxToolRoundtrips: 1
             })
 
-            const { text, toolResults, finishReason } = result
+            const { responseMessages, toolResults, finishReason, toolCalls } =
+                result
 
             this.logger.debug(
-                `Generated text: ${JSON.stringify(text, null, 2)}`
+                `Response messages: ${JSON.stringify(responseMessages, null, 2)}`
             )
             this.logger.debug(
                 `Finish reason: ${JSON.stringify(finishReason, null, 2)}`
             )
             this.logger.debug(
                 `Tool results: ${JSON.stringify(toolResults, null, 2)}`
+            )
+            this.logger.debug(
+                `Tool calls: ${JSON.stringify(toolCalls, null, 2)}`
             )
 
             return Ok(result)
