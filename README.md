@@ -48,3 +48,7 @@ pnpm run test:cov
 ## Error Handling
 
 -   [Error Handling](documentation/README.error-handling.md)
+
+## AI
+
+-   [Working with AI](documentation/README.ai.md)

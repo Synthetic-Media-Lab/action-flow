@@ -28,10 +28,12 @@
         "gc:push-prod": "./build-and-deploy-prod.sh"
     },
     "dependencies": {
+        "@ai-sdk/openai": "^0.0.58",
         "@nestjs/common": "^10.0.0",
         "@nestjs/config": "^3.2.3",
         "@nestjs/core": "^10.0.0",
         "@nestjs/platform-express": "^10.0.0",
+        "ai": "^3.3.28",
         "class-transformer": "^0.5.1",
         "class-validator": "^0.14.1",
         "dotenv-cli": "^7.4.2",
@@ -39,7 +41,8 @@
         "openai": "^4.58.1",
         "pratica": "^2.3.0",
         "reflect-metadata": "^0.2.0",
-        "rxjs": "^7.8.1"
+        "rxjs": "^7.8.1",
+        "zod": "^3.23.8"
     },
     "devDependencies": {
         "@commitlint/cli": "^19.4.1",
