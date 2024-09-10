@@ -117,6 +117,42 @@ gen-ai
 │   │   └── interface
 ```
 
+## Interceptors
+
+Interceptors are useful when you want to modify or transform the response before sending it back to the client. For instance, if you're integrating with multiple AI providers, you may need to transform the AI response to match the format required by a specific provider. This ensures that the client doesn't need to handle different formats themselves.
+
+Nest Interceptors run after the response has left the Controller.
+
+#### Usage
+
+To add an interceptor to a controller:
+
+```typescript
+@Controller("gen-ai")
+@UseInterceptors(OpenAIMessageInterceptor)
+export class OpenAIController {
+    // Controller logic
+}
+```
+
+#### Example Use Case
+
+An interceptor can transform raw AI responses (e.g., normalizing message formats or converting tool results) to match what an AI provider expects, ensuring consistency in what the client receives.
+
+```typescript
+@Injectable()
+export class OpenAIMessageInterceptor implements NestInterceptor {
+    intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+        return next.handle().pipe(
+            map(data => {
+                // Transform the response for a specific AI provider
+                return data
+            })
+        )
+    }
+}
+```
+
 ---
 
 [← Back to Main Documentation](../README.md)

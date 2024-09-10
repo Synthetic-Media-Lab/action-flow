@@ -1,4 +1,4 @@
-import { CoreMessage } from "ai"
+import { CoreMessage, ProviderMetadata } from "ai"
 
 export type OpenAIChatModelId =
     | "gpt-4o"
@@ -112,4 +112,21 @@ type Prompt = {
   A list of messsages. You can either use `prompt` or `messages` but not both.
      */
     messages?: Array<CoreMessage>
+}
+
+/**
+Text content part of a prompt. It contains a string of text.
+ */
+export interface TextPart$1 {
+    type: "text"
+    /**
+  The text content.
+     */
+    text: string
+    /**
+  Additional provider-specific metadata. They are passed through
+  to the provider from the AI SDK and enable provider-specific
+  functionality that can be fully encapsulated in the provider.
+   */
+    experimental_providerMetadata?: ProviderMetadata
 }

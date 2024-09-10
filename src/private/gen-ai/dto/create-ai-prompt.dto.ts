@@ -1,6 +1,14 @@
 import { CoreMessage } from "ai"
 import { Type } from "class-transformer"
-import { IsArray, IsOptional, IsString, ValidateNested } from "class-validator"
+import {
+    IsArray,
+    IsOptional,
+    IsString,
+    ValidateNested,
+    ValidateIf,
+    IsObject,
+    IsIn
+} from "class-validator"
 
 export class CreateAICustomPromptDto {
     @IsArray()
@@ -29,9 +37,14 @@ export class CreateAICustomPromptDto {
 }
 
 class CoreMessageDto {
-    @IsString()
+    @IsIn(["system", "user", "assistant", "tool"])
     role: "system" | "user" | "assistant" | "tool"
 
+    @ValidateIf(o => o.role !== "tool")
     @IsString()
-    content: string
+    @ValidateIf(o => o.role === "tool")
+    @IsObject()
+    content:
+        | string
+        | { tool_name: string; tool_output: Record<string, unknown> }
 }

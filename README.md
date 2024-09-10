@@ -29,6 +29,12 @@ $ pnpm run start:prod
 # unit tests
 pnpm run test
 
+# unit tests: run contiguously
+pnpm run test:watch-all
+
+# unit tests: run contiguously with maximum detail
+pnpm run test:watch-all-verbose
+
 # e2e tests
 pnpm run test:e2e
 

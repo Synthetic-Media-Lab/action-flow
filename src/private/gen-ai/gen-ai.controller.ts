@@ -25,8 +25,9 @@ interface AIRequestBody {
 }
 
 @Controller("gen-ai")
-export class AIController {
-    private readonly logger = new Logger(AIController.name)
+/* @UseInterceptors(OpenAIMessageInterceptor) */
+export class OpenAIController {
+    private readonly logger = new Logger(OpenAIController.name)
 
     constructor(
         @Inject(GEN_AI_SERVICE_TOKEN)
