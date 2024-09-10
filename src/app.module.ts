@@ -7,12 +7,14 @@ import { GoogleSheetModule } from "./private/google-sheet/google-sheet.module"
 import { ActionAModule } from "./public/actions/action-a/action-a.module"
 import { AIModule } from "./private/ai/ai.module"
 import { GenAIModule } from "./private/gen-ai/gen-ai.module"
+import { PuppeteerModule } from "./private/puppeteer/puppeteer.module"
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true
         }),
+        PuppeteerModule,
         ActionAModule,
         AIModule,
         GenAIModule,

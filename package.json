@@ -40,6 +40,7 @@
         "googleapis": "^144.0.0",
         "openai": "^4.58.1",
         "pratica": "^2.3.0",
+        "puppeteer": "^23.3.0",
         "reflect-metadata": "^0.2.0",
         "rxjs": "^7.8.1",
         "zod": "^3.23.8"
