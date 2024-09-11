@@ -2,7 +2,10 @@ import { Injectable, Logger } from "@nestjs/common"
 import puppeteer from "puppeteer"
 import { Result, Ok, Err } from "pratica"
 import { ConfigService } from "@nestjs/config"
-import { IPuppeteerService } from "./interface/puppeteer.interface"
+import {
+    IPuppeteerService,
+    ITakeScreenshotOptions
+} from "./interface/puppeteer.interface"
 
 @Injectable()
 export class PuppeteerService implements IPuppeteerService {
@@ -19,96 +22,9 @@ export class PuppeteerService implements IPuppeteerService {
         )
     }
 
-    async searchGoogle(searchTerm: string): Promise<Result<string[], Error>> {
-        try {
-            this.logger.debug(
-                `Launching Puppeteer to search Google for: ${searchTerm}`
-            )
-            this.logger.debug(
-                "Chrome executable path: ",
-                this.isLocal ? undefined : this.chromeExecutablePath
-            )
-
-            const browser = await puppeteer.launch({
-                headless: true,
-                args: ["--no-sandbox", "--disable-setuid-sandbox"],
-                executablePath: this.isLocal
-                    ? undefined
-                    : this.chromeExecutablePath
-            })
-
-            const page = await browser.newPage()
-
-            // 1. Navigate to Google's homepage
-            this.logger.debug("Navigating to Google homepage...")
-            await page.goto("https://www.google.com", {
-                timeout: 30000,
-                waitUntil: "domcontentloaded"
-            })
-
-            // Wait for search input field
-            await page.waitForSelector('input[title="Search"]', {
-                timeout: 10000
-            })
-            this.logger.debug("Google homepage loaded, entering search term...")
-
-            // 2. Type the search term into the Google search bar
-            await page.type('input[title="Search"]', searchTerm)
-
-            // 3. Press 'Enter' to submit the search form
-            this.logger.debug("Submitting search form...")
-            await Promise.all([
-                page.keyboard.press("Enter"),
-                page.waitForNavigation({
-                    timeout: 30000,
-                    waitUntil: "domcontentloaded"
-                }) // Wait for the page to load after the search
-            ])
-
-            // 4. Extract the search result titles
-            this.logger.debug("Extracting search results...")
-            const searchResults = await page.evaluate(() => {
-                const results = []
-                const items = document.querySelectorAll("h3") // Adjust the selector if necessary
-                items.forEach(item => {
-                    results.push(item.innerText)
-                })
-                return results
-            })
-
-            await browser.close()
-
-            // Return the list of search result titles wrapped in Ok
-            return Ok(searchResults)
-        } catch (error) {
-            this.logger.error(
-                `Failed to search Google: ${error.message}`,
-                error.stack
-            )
-
-            // Handle specific error cases for debugging purposes
-            if (error.message.includes("Timeout")) {
-                this.logger.error(
-                    "Timeout occurred while trying to load the page or submit the form."
-                )
-            } else if (error.message.includes("socket hang up")) {
-                this.logger.error(
-                    "Socket hang up likely due to network issues or connection reset."
-                )
-            }
-
-            return Err(new Error("Failed to search Google"))
-        }
-    }
-
     async testCheckPageContent(): Promise<Result<string, Error>> {
         try {
             this.logger.debug("Launching Puppeteer to check page content...")
-            this.logger.debug(
-                "Chrome executable path: ",
-                this.isLocal ? undefined : this.chromeExecutablePath
-            )
-
             const browser = await puppeteer.launch({
                 headless: true,
                 args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -118,20 +34,16 @@ export class PuppeteerService implements IPuppeteerService {
             })
 
             const page = await browser.newPage()
-
             this.logger.debug("Navigating to Google homepage...")
-
             await page.goto("https://www.google.com", {
                 timeout: 10000,
                 waitUntil: "networkidle2"
             })
 
             const pageContent = await page.content()
-
-            const visibleContent = pageContent.substring(0, 500)
+            const visibleContent = pageContent.substring(0, 1000)
 
             await browser.close()
-
             return Ok(`Page content: ${visibleContent}`)
         } catch (error) {
             this.logger.error(
@@ -139,6 +51,131 @@ export class PuppeteerService implements IPuppeteerService {
                 error.stack
             )
             return Err(new Error("Failed to access page."))
+        }
+    }
+
+    async searchGoogle(searchTerm: string): Promise<Result<string[], Error>> {
+        try {
+            this.logger.debug(
+                `Launching Puppeteer for Google search: ${searchTerm}`
+            )
+
+            const browser = await puppeteer.launch({
+                headless: true, // Keep headless mode since non-headless won't work in non-GUI environments
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+                executablePath: this.isLocal
+                    ? undefined
+                    : this.chromeExecutablePath
+            })
+
+            const page = await browser.newPage()
+            this.logger.debug("Navigating to Google homepage...")
+            await page.goto("https://www.google.com", {
+                timeout: 60000, // Increased timeout to 60 seconds
+                waitUntil: "networkidle2" // Wait until the network is idle
+            })
+
+            // Take screenshot after the page loads
+            const screenshotPathBefore = `/tmp/google_home_before_search_${Date.now()}.png`
+            await page.screenshot({ path: screenshotPathBefore })
+            this.logger.debug(
+                `Screenshot before entering search term: ${screenshotPathBefore}`
+            )
+
+            // Wait for the search textarea element
+            await page.waitForSelector('textarea[aria-label="Search"]', {
+                timeout: 30000
+            })
+            this.logger.debug("Google homepage loaded, entering search term...")
+
+            // Type the search term into the Google search bar
+            await page.type('textarea[aria-label="Search"]', searchTerm)
+
+            // Take screenshot after entering the search term
+            const screenshotPathAfter = `/tmp/google_home_after_search_${Date.now()}.png`
+            await page.screenshot({ path: screenshotPathAfter })
+            this.logger.debug(
+                `Screenshot after entering search term: ${screenshotPathAfter}`
+            )
+
+            // Submit the search form and wait for navigation
+            this.logger.debug("Submitting search form...")
+            await Promise.all([
+                page.keyboard.press("Enter"),
+                page.waitForNavigation({
+                    timeout: 60000, // Increased navigation timeout to 60 seconds
+                    waitUntil: "networkidle2"
+                })
+            ])
+
+            // Take screenshot after navigating to the search results
+            const screenshotPathResults = `/tmp/google_search_results_${Date.now()}.png`
+            await page.screenshot({ path: screenshotPathResults })
+            this.logger.debug(
+                `Screenshot after search results: ${screenshotPathResults}`
+            )
+
+            // Extract the search result titles
+            this.logger.debug("Extracting search results...")
+            const searchResults = await page.evaluate(() => {
+                const results: string[] = []
+                document.querySelectorAll("h3").forEach(item => {
+                    results.push(item.innerText)
+                })
+                return results
+            })
+
+            await browser.close()
+            return Ok(searchResults)
+        } catch (error) {
+            this.logger.error(
+                `Failed to search Google: ${error.message}`,
+                error.stack
+            )
+            return Err(new Error("Failed to search Google"))
+        }
+    }
+
+    async takeScreenshot(
+        options: ITakeScreenshotOptions
+    ): Promise<Result<string, Error>> {
+        const { url, width = 1920, height = 1080 } = options
+
+        try {
+            this.logger.debug(
+                `Launching Puppeteer to take a screenshot of: ${url} with dimensions ${width}x${height}`
+            )
+
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+                executablePath: this.isLocal
+                    ? undefined
+                    : this.chromeExecutablePath
+            })
+
+            const page = await browser.newPage()
+
+            await page.setViewport({ width, height })
+            this.logger.debug(`Navigating to ${url}...`)
+
+            await page.goto(url, {
+                timeout: 60000,
+                waitUntil: "networkidle2"
+            })
+
+            const screenshotPath = `./screenshots/screenshot_${Date.now()}.png`
+            await page.screenshot({ path: screenshotPath })
+            this.logger.debug(`Screenshot saved at: ${screenshotPath}`)
+
+            await browser.close()
+            return Ok(screenshotPath)
+        } catch (error) {
+            this.logger.error(
+                `Failed to take screenshot: ${error.message}`,
+                error.stack
+            )
+            return Err(new Error("Failed to take screenshot"))
         }
     }
 }

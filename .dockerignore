@@ -1,10 +1,11 @@
 Dockerfile
 .dockerignore
-node_modules
+node_modules/
 npm-debug.log
-coverage
-dist
+coverage/
+dist/
 .env
 .env*
 !.env*.example
 llm_output.txt
+screenshots/
