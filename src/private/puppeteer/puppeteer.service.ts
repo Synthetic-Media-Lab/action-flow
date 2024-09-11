@@ -24,6 +24,10 @@ export class PuppeteerService implements IPuppeteerService {
             this.logger.debug(
                 `Launching Puppeteer to search Google for: ${searchTerm}`
             )
+            this.logger.debug(
+                "Chrome executable path: ",
+                this.isLocal ? undefined : this.chromeExecutablePath
+            )
 
             const browser = await puppeteer.launch({
                 headless: true,
@@ -100,6 +104,10 @@ export class PuppeteerService implements IPuppeteerService {
     async testCheckPageContent(): Promise<Result<string, Error>> {
         try {
             this.logger.debug("Launching Puppeteer to check page content...")
+            this.logger.debug(
+                "Chrome executable path: ",
+                this.isLocal ? undefined : this.chromeExecutablePath
+            )
 
             const browser = await puppeteer.launch({
                 headless: true,
