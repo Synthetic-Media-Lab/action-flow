@@ -1,7 +1,16 @@
-import { Controller, Get, Logger, Query, HttpException } from "@nestjs/common"
-import { PuppeteerService } from "./puppeteer.service"
+import {
+    Body,
+    Controller,
+    Get,
+    HttpException,
+    Logger,
+    Post,
+    Query
+} from "@nestjs/common"
 import { Result } from "pratica"
-import { ITakeScreenshotOptions } from "./interface/puppeteer.interface"
+import { PuppeteerService } from "./puppeteer.service"
+import { TrademarkResult } from "./interface/puppeteer.interface"
+import { CheckTrademarkDto } from "./dto/puppeteer.dto"
 
 @Controller("puppeteer")
 export class PuppeteerController {
@@ -27,24 +36,6 @@ export class PuppeteerController {
         })
     }
 
-    @Get("search-google")
-    async searchGoogle(@Query("q") query: string): Promise<string[]> {
-        this.logger.debug(`Request to search Google for: ${query}`)
-
-        const result: Result<string[], Error> =
-            await this.puppeteerService.searchGoogle(query)
-
-        return result.cata({
-            Ok: (searchResults: string[]) => searchResults,
-            Err: (error: Error) => {
-                this.logger.error(
-                    `Error during Google search: ${error.message}`
-                )
-                throw new HttpException("Failed to search Google", 500)
-            }
-        })
-    }
-
     @Get("take-screenshot")
     async takeScreenshot(
         @Query("url") url: string,
@@ -58,20 +49,34 @@ export class PuppeteerController {
             `Request to take screenshot of: ${url} with dimensions ${widthInt}x${heightInt}`
         )
 
-        const options: ITakeScreenshotOptions = {
-            url,
-            width: widthInt,
-            height: heightInt
-        }
+        const options = { url, width: widthInt, height: heightInt }
 
         const result: Result<string, Error> =
             await this.puppeteerService.takeScreenshot(options)
 
         return result.cata({
-            Ok: (path: string) => `Screenshot saved at: ${path}`,
+            Ok: (screenshotPath: string) => {
+                this.logger.debug(`Screenshot saved at: ${screenshotPath}`)
+                return screenshotPath
+            },
             Err: (error: Error) => {
                 this.logger.error(`Error taking screenshot: ${error.message}`)
                 throw new HttpException("Failed to take screenshot", 500)
+            }
+        })
+    }
+
+    @Post("check-trademark")
+    async checkTrademark(
+        @Body() checkTrademarkDto: CheckTrademarkDto
+    ): Promise<TrademarkResult | string> {
+        const result: Result<TrademarkResult, Error> =
+            await this.puppeteerService.checkTrademark(checkTrademarkDto)
+
+        return result.cata({
+            Ok: trademarkResult => trademarkResult,
+            Err: (error: Error) => {
+                throw new HttpException("Failed to search trademarks", 500)
             }
         })
     }

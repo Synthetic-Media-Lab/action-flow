@@ -76,6 +76,11 @@ RUN chown -R node:node /usr/src/app && chmod -R 775 /usr/src/app
 
 USER node
 
+# Create the screenshots directory for Puppeteer
+RUN mkdir -p /usr/src/app/screenshots
+
+RUN chown -R node:node /usr/src/app/screenshots
+
 EXPOSE 8080
 
 CMD ["node", "dist/main.js"]
