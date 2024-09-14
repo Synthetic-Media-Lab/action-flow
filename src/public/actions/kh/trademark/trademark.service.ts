@@ -14,13 +14,40 @@ export class TrademarkService implements ITrademark {
 
     constructor() {}
 
-    public check({
+    public checkWipo({
         name
     }: CheckTrademarkDto): Result<TrademarkResult, TrademarkError> {
-        this.logger.debug(`Checking trademark for: ${name}`)
+        this.logger.debug(`Checking WIPO trademark for: ${name}`)
 
         if (!name) {
-            return Err(new TrademarkError("Trademark name is required"))
+            return Err(new TrademarkError("WIPO Trademark name is required"))
+        }
+
+        // Mocked response
+        const randomStatus = Math.random()
+        let status: TrademarkStatus
+
+        if (randomStatus < 0.33) {
+            status = TrademarkStatus.AVAILABLE
+        } else if (randomStatus < 0.66) {
+            status = TrademarkStatus.REGISTERED
+        } else {
+            status = TrademarkStatus.PENDING
+        }
+
+        return Ok({
+            name,
+            status
+        })
+    }
+
+    public checkEuipo({
+        name
+    }: CheckTrademarkDto): Result<TrademarkResult, TrademarkError> {
+        this.logger.debug(`Checking EUIPO trademark for: ${name}`)
+
+        if (!name) {
+            return Err(new TrademarkError("EUIPO Trademark name is required"))
         }
 
         // Mocked response

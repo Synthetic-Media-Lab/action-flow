@@ -24,21 +24,52 @@ export class TrademarkController {
         this.logger = new Logger(TrademarkController.name)
     }
 
-    @Get("check")
+    @Get("checkWipo")
     @UsePipes(new ValidationPipe({ transform: true }))
-    async check(
+    async checkWipo(
         @Query() checkTrademarkDto: CheckTrademarkDto
     ): Promise<TrademarkResult> {
         const { name } = checkTrademarkDto
 
-        this.logger.debug(`Received trademark name: ${name}`)
+        this.logger.debug(`Received WIPO trademark name: ${name}`)
 
-        const result = this.trademarkService.check(checkTrademarkDto)
+        const result = this.trademarkService.checkWipo(checkTrademarkDto)
 
         return result.cata({
             Ok: result => result,
             Err: error => {
-                this.logger.error(`Error checking trademark: ${error.message}`)
+                this.logger.error(
+                    `Error checking WIPO trademark: ${error.message}`
+                )
+
+                throw new HttpException(
+                    {
+                        status: HttpStatus.BAD_REQUEST,
+                        error: error.message
+                    },
+                    HttpStatus.BAD_REQUEST
+                )
+            }
+        })
+    }
+
+    @Get("checkEuipo")
+    @UsePipes(new ValidationPipe({ transform: true }))
+    async checkEuipo(
+        @Query() checkTrademarkDto: CheckTrademarkDto
+    ): Promise<TrademarkResult> {
+        const { name } = checkTrademarkDto
+
+        this.logger.debug(`Received EUIPO trademark name: ${name}`)
+
+        const result = this.trademarkService.checkEuipo(checkTrademarkDto)
+
+        return result.cata({
+            Ok: result => result,
+            Err: error => {
+                this.logger.error(
+                    `Error checking EUIPO trademark: ${error.message}`
+                )
 
                 throw new HttpException(
                     {

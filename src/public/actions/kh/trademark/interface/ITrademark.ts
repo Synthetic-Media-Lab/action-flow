@@ -2,10 +2,14 @@ import { Result } from "pratica"
 import { TrademarkError } from "../error/trademark.error"
 import { CheckTrademarkDto } from "../dto/trademark.dto"
 
-export interface ITrademark extends ICheckTrademark {}
+export interface ITrademark extends ICheckWipoTrademark, ICheckEuipoTrademark {}
 
-interface ICheckTrademark {
-    check(data: CheckTrademarkDto): Result<TrademarkResult, TrademarkError>
+interface ICheckWipoTrademark {
+    checkWipo(data: CheckTrademarkDto): Result<TrademarkResult, TrademarkError>
+}
+
+interface ICheckEuipoTrademark {
+    checkEuipo(data: CheckTrademarkDto): Result<TrademarkResult, TrademarkError>
 }
 
 export enum TrademarkStatus {
