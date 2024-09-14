@@ -44,21 +44,21 @@ export class FetchService implements IFetchService {
         try {
             const response = await this.nativeFetch(input, init)
 
+            const textBody = await response.text()
+
             if (
                 !response.ok ||
                 !response.headers.get("content-type")?.includes("text/html")
             ) {
-                const textBody = await response.text()
                 return Err(
                     new FetchError(
-                        response.statusText || "Unknown error",
+                        response.statusText || textBody || "Unknown error",
                         response.status
                     )
                 )
             }
 
-            const htmlText = await response.text()
-            return Ok(htmlText)
+            return Ok(textBody)
         } catch (error) {
             return Err(
                 new FetchError((error as Error).message || "Fetch failed")

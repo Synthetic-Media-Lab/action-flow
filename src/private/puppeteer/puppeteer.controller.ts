@@ -1,16 +1,6 @@
-import {
-    Body,
-    Controller,
-    Get,
-    HttpException,
-    Logger,
-    Post,
-    Query
-} from "@nestjs/common"
+import { Controller, Get, HttpException, Logger, Query } from "@nestjs/common"
 import { Result } from "pratica"
 import { PuppeteerService } from "./puppeteer.service"
-import { TrademarkResult } from "./interface/puppeteer.interface"
-import { CheckTrademarkDto } from "./dto/puppeteer.dto"
 
 @Controller("puppeteer")
 export class PuppeteerController {
@@ -62,21 +52,6 @@ export class PuppeteerController {
             Err: (error: Error) => {
                 this.logger.error(`Error taking screenshot: ${error.message}`)
                 throw new HttpException("Failed to take screenshot", 500)
-            }
-        })
-    }
-
-    @Post("check-trademark")
-    async checkTrademark(
-        @Body() checkTrademarkDto: CheckTrademarkDto
-    ): Promise<TrademarkResult | string> {
-        const result: Result<TrademarkResult, Error> =
-            await this.puppeteerService.checkTrademark(checkTrademarkDto)
-
-        return result.cata({
-            Ok: trademarkResult => trademarkResult,
-            Err: (error: Error) => {
-                throw new HttpException("Failed to search trademarks", 500)
             }
         })
     }
