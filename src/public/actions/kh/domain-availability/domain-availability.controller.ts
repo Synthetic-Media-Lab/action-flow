@@ -1,20 +1,20 @@
 import {
-    Body,
     Controller,
     Get,
     HttpException,
     HttpStatus,
     Inject,
     Logger,
+    Query,
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
+import { DOMAIN_AVAILABILITY_SERVICE_TOKEN } from "./domain-availability.providers"
+import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 import {
     DomainAvailabilityResult,
     IDomainAvailability
 } from "./interfaces/IDomainAvailability"
-import { DOMAIN_AVAILABILITY_SERVICE_TOKEN } from "./domain-availability.providers"
-import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 
 @Controller("domain-availability")
 export class DomainAvailabilityController {
@@ -28,10 +28,14 @@ export class DomainAvailabilityController {
     }
 
     @Get("check")
-    @UsePipes(new ValidationPipe())
+    @UsePipes(new ValidationPipe({ transform: true }))
     async check(
-        @Body() checkDomainAvailabilityDto: CheckDomainAvailabilityDto
+        @Query() checkDomainAvailabilityDto: CheckDomainAvailabilityDto
     ): Promise<DomainAvailabilityResult> {
+        const { domain } = checkDomainAvailabilityDto
+
+        this.logger.debug(`Received domain: ${domain}`)
+
         const result = this.domainAvailabilityService.check(
             checkDomainAvailabilityDto
         )
