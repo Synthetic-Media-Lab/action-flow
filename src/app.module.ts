@@ -6,8 +6,8 @@ import { AppService } from "./app.service"
 import { FetchModule } from "./private/fetch/fetch.module"
 import { GenAIModule } from "./private/gen-ai/gen-ai.module"
 import { OAuth2Module } from "./private/oauth2/oauth2.module"
-import { ActionAModule } from "./public/actions/action-a/action-a.module"
 import { DomainAvailabilityModule } from "./public/actions/kh/domain-availability/domain-availability.module"
+import { TrademarkModule } from "./public/actions/kh/trademark/trademark.module"
 
 @Module({
     imports: [
@@ -17,8 +17,8 @@ import { DomainAvailabilityModule } from "./public/actions/kh/domain-availabilit
         FetchModule,
         OAuth2Module,
         GenAIModule,
-        ActionAModule,
-        DomainAvailabilityModule
+        DomainAvailabilityModule,
+        TrademarkModule
     ],
     controllers: [AppController],
     providers: [AppService, ...appConfig],
