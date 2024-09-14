@@ -8,6 +8,7 @@ import { GenAIModule } from "./private/gen-ai/gen-ai.module"
 import { OAuth2Module } from "./private/oauth2/oauth2.module"
 import { DomainAvailabilityModule } from "./public/actions/kh/domain-availability/domain-availability.module"
 import { TrademarkModule } from "./public/actions/kh/trademark/trademark.module"
+import { AiAnalysisModule } from "./public/actions/kh/ai-analysis/ai-analysis.module"
 
 @Module({
     imports: [
@@ -18,7 +19,8 @@ import { TrademarkModule } from "./public/actions/kh/trademark/trademark.module"
         OAuth2Module,
         GenAIModule,
         DomainAvailabilityModule,
-        TrademarkModule
+        TrademarkModule,
+        AiAnalysisModule
     ],
     controllers: [AppController],
     providers: [AppService, ...appConfig],
