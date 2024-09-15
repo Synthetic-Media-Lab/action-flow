@@ -13,7 +13,7 @@ import {
 import { CoreMessage, GenerateTextResult } from "ai"
 import { Result } from "pratica"
 import { SystemMessage } from "./decorators/system-message.decorator"
-import { CreateAICustomPromptDto } from "./dto/create-ai-prompt.dto"
+import { AiGenerateTextDto } from "./dto/create-ai-prompt.dto"
 import { GenAIError } from "./error/gen-ai.error"
 import { FunctionTools } from "./functions/function-handlers"
 import { GEN_AI_SERVICE_TOKEN } from "./gen-ai.provider"
@@ -39,14 +39,14 @@ export class OpenAIController {
     @SystemMessage("You are a helpful ActionFlow assistant")
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     async generateText(
-        @Body() createAICustomPromptDto: CreateAICustomPromptDto,
+        @Body() AiGenerateTextDto: AiGenerateTextDto,
         @Req() req: { body: AIRequestBody }
     ): Promise<GenerateTextResponse> {
         this.logger.debug(
-            `Received body: ${JSON.stringify(createAICustomPromptDto, null, 2)}`
+            `Received body: ${JSON.stringify(AiGenerateTextDto, null, 2)}`
         )
 
-        const { messages } = createAICustomPromptDto
+        const { messages } = AiGenerateTextDto
 
         const updatedMessages = this.addSystemMessage(messages, req)
 

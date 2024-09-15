@@ -10,7 +10,7 @@ import {
     IsIn
 } from "class-validator"
 
-export class CreateAICustomPromptDto {
+export class AiGenerateTextDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CoreMessageDto)
@@ -36,7 +36,7 @@ export class CreateAICustomPromptDto {
     stopSequences?: string[]
 }
 
-class CoreMessageDto {
+export class CoreMessageDto {
     @IsIn(["system", "user", "assistant", "tool"])
     role: "system" | "user" | "assistant" | "tool"
 

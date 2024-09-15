@@ -7,13 +7,16 @@ import {
     Body,
     UsePipes,
     ValidationPipe,
-    Logger
+    Logger,
+    UseInterceptors
 } from "@nestjs/common"
 import { AI_ANALYSIS_SERVICE_TOKEN } from "./ai-analysis.providers"
 import { AiAnalysisDto } from "./dto/ai-analysis.dto"
 import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
+import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
 
 @Controller("ai-analysis")
+@UseInterceptors(LoggingInterceptor)
 export class AiAnalysisController {
     private readonly logger = new Logger(AiAnalysisController.name)
 
