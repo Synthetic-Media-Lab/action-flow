@@ -1,9 +1,12 @@
 import { Module } from "@nestjs/common"
 import { TrademarkController } from "./trademark.controller"
 import { trademarkServiceProvider } from "./trademark.providers"
+import { OAuth2Module } from "src/private/oauth2/oauth2.module"
+import { FetchModule } from "src/private/fetch/fetch.module"
+import { ConfigModule } from "@nestjs/config"
 
 @Module({
-    imports: [],
+    imports: [ConfigModule, OAuth2Module, FetchModule],
     controllers: [TrademarkController],
     providers: [trademarkServiceProvider],
     exports: [trademarkServiceProvider]

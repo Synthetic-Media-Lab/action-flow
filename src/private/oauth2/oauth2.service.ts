@@ -1,53 +1,109 @@
-import { Injectable } from "@nestjs/common"
-import { ConfigService } from "@nestjs/config"
-import { Result, Ok, Err } from "pratica"
-import { FetchService } from "../fetch/fetch.service"
+import { Injectable, Logger } from "@nestjs/common"
+import { Err, Ok, Result } from "pratica"
+import { AuthorizationCodeStrategy } from "./strategies/authorization-code.strategy"
+import { ClientCredentialsStrategy } from "./strategies/client-credentials.strategy"
+import { IOAuth2Service, OAuthToken } from "./interface/oauth2.interface"
 
 @Injectable()
-export class OAuth2Service implements OAuth2Service {
+export class OAuth2Service implements IOAuth2Service {
+    private readonly logger = new Logger(OAuth2Service.name)
     private token: string
     private tokenExpiry: Date
 
     constructor(
-        private readonly fetchService: FetchService,
-        private readonly configService: ConfigService
+        private readonly clientCredentialsStrategy: ClientCredentialsStrategy,
+        private readonly authorizationCodeStrategy: AuthorizationCodeStrategy
     ) {}
 
-    async getAccessToken(): Promise<Result<string, Error>> {
-        if (this.token && this.tokenExpiry > new Date()) {
-            return Ok(this.token)
+    // Client Credentials Flow
+    async getAccessToken<T extends OAuthToken>(): Promise<Result<T, Error>> {
+        this.logger.debug("Starting getAccessToken process")
+
+        if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
+            this.logger.debug(`Using cached token: ${this.token}`)
+            this.logger.debug(`Token expiry time: ${this.tokenExpiry}`)
+
+            return Ok({
+                access_token: this.token,
+                expires_in: this.tokenExpiry.getTime()
+            } as T)
         }
 
-        const tokenUrl = this.configService.get<string>("OAUTH_TOKEN_URL")
-        const body = new URLSearchParams({
-            grant_type: "client_credentials",
-            client_id: this.configService.get<string>("OAUTH_CLIENT_ID"),
-            client_secret: this.configService.get<string>(
-                "OAUTH_CLIENT_SECRET"
-            ),
-            scope: this.configService.get<string>("OAUTH_SCOPE")
-        })
+        this.logger.debug("No valid cached token found, requesting new token")
+        const tokenResult =
+            await this.clientCredentialsStrategy.getAccessToken()
 
-        const fetchResult = await this.fetchService.json<{
-            access_token: string
-            expires_in: number
-        }>(tokenUrl, {
-            method: "POST",
-            body,
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded"
+        return tokenResult.cata({
+            Ok: token => {
+                this.logger.debug(
+                    "Received new access token:",
+                    token.access_token
+                )
+                this.logger.debug(
+                    `Token expires in: ${token.expires_in} seconds`
+                )
+
+                // Save the token and its expiry time
+                this.token = token.access_token
+                this.tokenExpiry = new Date(
+                    Date.now() + (token.expires_in - 60) * 1000
+                )
+                this.logger.debug(
+                    `Token expiry date set to: ${this.tokenExpiry}`
+                )
+
+                return Ok(token as T)
+            },
+            Err: error => {
+                this.logger.error(
+                    `Error retrieving access token: ${error.message}`
+                )
+                return Err(error)
             }
         })
+    }
 
-        return fetchResult.cata({
-            Ok: ({ access_token, expires_in }) => {
-                this.token = access_token
+    // Authorization Code Flow
+    async getAccessTokenWithAuthCode<T extends OAuthToken>(
+        code: string,
+        redirectUri: string
+    ): Promise<Result<T, Error>> {
+        const tokenResult =
+            await this.authorizationCodeStrategy.getAccessTokenWithAuthCode<T>(
+                code,
+                redirectUri
+            )
+
+        return tokenResult.cata({
+            Ok: token => {
+                this.token = token.access_token
                 this.tokenExpiry = new Date(
-                    Date.now() + (expires_in - 60) * 1000
+                    Date.now() + (token.expires_in - 60) * 1000
                 )
-                return Ok(this.token)
+                return Ok(token as T)
             },
-            Err: () => Err(new Error("Failed to retrieve access token"))
+            Err: error => Err(error)
+        })
+    }
+
+    // Refresh Token Flow
+    async refreshAccessToken<T extends OAuthToken>(
+        refreshToken: string
+    ): Promise<Result<T, Error>> {
+        const tokenResult =
+            await this.authorizationCodeStrategy.refreshAccessToken<T>(
+                refreshToken
+            )
+
+        return tokenResult.cata({
+            Ok: token => {
+                this.token = token.access_token
+                this.tokenExpiry = new Date(
+                    Date.now() + (token.expires_in - 60) * 1000
+                )
+                return Ok(token as T)
+            },
+            Err: error => Err(error)
         })
     }
 }

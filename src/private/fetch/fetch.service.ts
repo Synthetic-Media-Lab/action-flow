@@ -1,4 +1,4 @@
-import { Injectable, Inject } from "@nestjs/common"
+import { Injectable, Inject, Logger } from "@nestjs/common"
 import { Ok, Err, Result } from "pratica"
 import { FetchError } from "./error/fetch.error"
 import { FETCH_TOKEN } from "./fetch.providers"
@@ -6,6 +6,8 @@ import { IFetchService } from "./interface/fetch.interface"
 
 @Injectable()
 export class FetchService implements IFetchService {
+    private readonly logger = new Logger(FetchService.name)
+
     constructor(
         @Inject(FETCH_TOKEN) private readonly nativeFetch: typeof fetch
     ) {}
@@ -15,9 +17,24 @@ export class FetchService implements IFetchService {
         init?: RequestInit
     ): Promise<Result<T, FetchError>> {
         try {
+            this.logger.debug(
+                `Fetching JSON with configuration: ${JSON.stringify({ input, init })}`
+            )
+
             const response = await this.nativeFetch(input, init)
 
-            console.log("response", response)
+            this.logger.debug(
+                "Response status: ",
+                JSON.stringify(response.status)
+            )
+            this.logger.debug(
+                "Response headers: ",
+                JSON.stringify(response.headers)
+            )
+            this.logger.debug(
+                "Response body used: ",
+                JSON.stringify(response.bodyUsed)
+            )
 
             if (!response.ok) {
                 return Err(
@@ -28,8 +45,11 @@ export class FetchService implements IFetchService {
                 )
             }
 
-            const data = (await response.json()) as T
-            return Ok(data)
+            const jsonResponse = await response.json()
+
+            this.logger.debug("Response JSON: ", jsonResponse)
+
+            return Ok(jsonResponse)
         } catch (error) {
             return Err(
                 new FetchError((error as Error).message || "Fetch failed")

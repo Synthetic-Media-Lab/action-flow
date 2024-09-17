@@ -16,6 +16,7 @@ export class LoggingInterceptor implements NestInterceptor {
         next: CallHandler
     ): Observable<unknown> {
         const request = context.switchToHttp().getRequest()
+
         this.logger.debug(`Request body: ${JSON.stringify(request.body)}`)
 
         return next.handle()

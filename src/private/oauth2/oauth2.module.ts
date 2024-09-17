@@ -1,13 +1,19 @@
 import { Module } from "@nestjs/common"
 import { ConfigModule } from "@nestjs/config"
-import { EUIPOService } from "./euipo.service"
 import { OAuth2Service } from "./oauth2.service"
 import { FetchModule } from "../fetch/fetch.module"
-import { EUIPOController } from "./oauth2.controller"
+import { OAuth2Controller } from "./oauth2.controller"
+import { ClientCredentialsStrategy } from "./strategies/client-credentials.strategy"
+import { AuthorizationCodeStrategy } from "./strategies/authorization-code.strategy"
 
 @Module({
     imports: [ConfigModule, FetchModule],
-    providers: [EUIPOService, OAuth2Service],
-    controllers: [EUIPOController]
+    providers: [
+        OAuth2Service,
+        ClientCredentialsStrategy,
+        AuthorizationCodeStrategy
+    ],
+    controllers: [OAuth2Controller],
+    exports: [OAuth2Service]
 })
 export class OAuth2Module {}
