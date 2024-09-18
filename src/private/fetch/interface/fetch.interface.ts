@@ -1,5 +1,5 @@
 import { Result } from "pratica"
-import { FetchError } from "../error/fetch.error"
+import { FetchError } from "../../../error/fetch.error"
 
 export interface IFetchService {
     json<T>(

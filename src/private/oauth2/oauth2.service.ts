@@ -1,8 +1,11 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { Err, Ok, Result } from "pratica"
+import { RetryService } from "../retry/retry.service"
+import { IOAuth2Service, OAuthToken } from "./interface/oauth2.interface"
 import { AuthorizationCodeStrategy } from "./strategies/authorization-code.strategy"
 import { ClientCredentialsStrategy } from "./strategies/client-credentials.strategy"
-import { IOAuth2Service, OAuthToken } from "./interface/oauth2.interface"
+import { UnauthorizedError } from "src/error/unauthorized.error"
+import { AppError } from "src/error"
 
 @Injectable()
 export class OAuth2Service implements IOAuth2Service {
@@ -12,11 +15,14 @@ export class OAuth2Service implements IOAuth2Service {
 
     constructor(
         private readonly clientCredentialsStrategy: ClientCredentialsStrategy,
-        private readonly authorizationCodeStrategy: AuthorizationCodeStrategy
+        private readonly authorizationCodeStrategy: AuthorizationCodeStrategy,
+        private readonly retryService: RetryService
     ) {}
 
     // Client Credentials Flow
-    async getAccessToken<T extends OAuthToken>(): Promise<Result<T, Error>> {
+    async getAccessToken<T extends OAuthToken>(): Promise<
+        Result<T, Error | UnauthorizedError>
+    > {
         this.logger.debug("Starting getAccessToken process")
 
         if (this.token && this.tokenExpiry && this.tokenExpiry > new Date()) {
@@ -30,8 +36,23 @@ export class OAuth2Service implements IOAuth2Service {
         }
 
         this.logger.debug("No valid cached token found, requesting new token")
-        const tokenResult =
-            await this.clientCredentialsStrategy.getAccessToken()
+
+        const tokenResult = await this.retryService.retry<
+            Result<T, Error | UnauthorizedError>,
+            AppError
+        >(() => this.clientCredentialsStrategy.getAccessToken(), {
+            retries: 5,
+            delay: 1000,
+            exponentialBackoff: true,
+            retryOn: (error: AppError) => {
+                if (error instanceof UnauthorizedError) {
+                    this.logger.debug(
+                        "Received UnauthorizedError (401), retrying..."
+                    )
+                }
+                return true
+            }
+        })
 
         return tokenResult.cata({
             Ok: token => {
@@ -43,7 +64,6 @@ export class OAuth2Service implements IOAuth2Service {
                     `Token expires in: ${token.expires_in} seconds`
                 )
 
-                // Save the token and its expiry time
                 this.token = token.access_token
                 this.tokenExpiry = new Date(
                     Date.now() + (token.expires_in - 60) * 1000

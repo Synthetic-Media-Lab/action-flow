@@ -6,14 +6,17 @@ import {
     Inject,
     Logger,
     Query,
+    UseInterceptors,
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
 import { CheckTrademarkDto } from "./dto/trademark.dto"
 import { EuipoTrademarkResult, ITrademark } from "./interface/ITrademark"
 import { TRADEMARK_SERVICE_TOKEN } from "./trademark.providers"
+import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
 
 @Controller("trademark")
+@UseInterceptors(LoggingInterceptor)
 export class TrademarkController {
     private readonly logger: Logger
 
@@ -29,9 +32,11 @@ export class TrademarkController {
     async checkEuipo(
         @Query() checkTrademarkDto: CheckTrademarkDto
     ): Promise<EuipoTrademarkResult> {
-        const { name } = checkTrademarkDto
+        const { name, niceClasses, size, page } = checkTrademarkDto
 
-        this.logger.debug(`Received EUIPO trademark name: ${name}`)
+        this.logger.debug(
+            `Received EUIPO trademark query: name=${name}, niceClasses=${niceClasses}, size=${size}, page=${page}`
+        )
 
         const result = await this.trademarkService.checkEuipo(checkTrademarkDto)
 

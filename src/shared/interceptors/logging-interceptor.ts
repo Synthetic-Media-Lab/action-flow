@@ -17,7 +17,13 @@ export class LoggingInterceptor implements NestInterceptor {
     ): Observable<unknown> {
         const request = context.switchToHttp().getRequest()
 
-        this.logger.debug(`Request body: ${JSON.stringify(request.body)}`)
+        if (request.method === "GET") {
+            this.logger.debug(`Request query: ${JSON.stringify(request.query)}`)
+        }
+
+        if (request.method === "POST" || request.method === "PUT") {
+            this.logger.debug(`Request body: ${JSON.stringify(request.body)}`)
+        }
 
         return next.handle()
     }

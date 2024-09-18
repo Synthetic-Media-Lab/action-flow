@@ -55,6 +55,10 @@ pnpm run test:cov
 
 -   [Error Handling](documentation/README.error-handling.md)
 
+## Retry Module
+
+-   [Handling Retries](documentation/README.retry-module.md)
+
 ## AI
 
 -   [Working with AI](documentation/README.ai.md)

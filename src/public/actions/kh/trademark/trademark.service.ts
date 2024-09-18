@@ -8,28 +8,34 @@ import { TrademarkError } from "./error/trademark.error"
 import {
     ITrademark,
     EuipoTrademarkStatus,
-    EuipoTrademarkResult
+    EuipoTrademarkResult,
+    EuipoTrademarkSearchStrategy
 } from "./interface/ITrademark"
+import { RetryService } from "src/private/retry/retry.service"
 
 @Injectable()
 export class TrademarkService implements ITrademark {
     private readonly logger = new Logger(TrademarkService.name)
 
     constructor(
+        private readonly configService: ConfigService,
         private readonly oauth2Service: OAuth2Service,
         private readonly fetchService: FetchService,
-        private readonly configService: ConfigService
+        private readonly retryService: RetryService
     ) {}
 
     public async checkEuipo({
         name,
         niceClasses = [],
-        statusesToExclude = []
+        searchStrategy = EuipoTrademarkSearchStrategy.EXACT,
+        statusesToExclude = [],
+        size = 10,
+        page = 0
     }: CheckTrademarkDto): Promise<
         Result<EuipoTrademarkResult, TrademarkError>
     > {
         this.logger.debug(
-            `Checking EUIPO trademark. Configuration: ${JSON.stringify({ name, niceClasses, statusesToExclude })}`
+            `Checking EUIPO trademark. Configuration: ${JSON.stringify({ name, niceClasses, searchStrategy, statusesToExclude, size, page })}`
         )
 
         if (!name) {
@@ -50,41 +56,56 @@ export class TrademarkService implements ITrademark {
 
         const tokenResult = await this.oauth2Service.getAccessToken()
 
-        this.logger.debug(
-            `Received access token: ${JSON.stringify(tokenResult)}`
-        )
-
         return tokenResult.cata({
             Ok: async accessToken => {
+                this.logger.debug(
+                    `Received access token: ${JSON.stringify(accessToken)}`
+                )
+
                 const euipoUrl = this.configService.get<string>("EUIPO_API_URL")
 
+                const brandSearchQuery =
+                    searchStrategy === EuipoTrademarkSearchStrategy.EXACT
+                        ? `wordMarkSpecification.verbalElement=="${name}"`
+                        : `wordMarkSpecification.verbalElement=="*${name}*"`
+
                 const query = this.buildEuipoQuery(
-                    name,
+                    brandSearchQuery,
                     niceClasses,
-                    defaultStatusesToExclude
+                    defaultStatusesToExclude.length
+                        ? defaultStatusesToExclude
+                        : []
                 )((name, niceClasses, statusesToExclude) => {
-                    const statusStrings = statusesToExclude.map(status =>
-                        status.toString()
-                    )
-                    return `wordMarkSpecification.verbalElement==*${name}* and niceClasses=all=(${niceClasses.join(
-                        ","
-                    )}) and status=out=(${statusStrings.join(",")})`
+                    const statusStrings = statusesToExclude.length
+                        ? `and status=out=(${statusesToExclude.join(",")})`
+                        : ""
+
+                    return `${name} and niceClasses=all=(${niceClasses.join(",")}) ${statusStrings}`
                 })
 
-                const fetchResult =
-                    await this.fetchService.json<EuipoTrademarkResult>(
-                        `${euipoUrl}?${query}`,
-                        {
-                            method: "GET",
-                            headers: {
-                                Authorization: `Bearer ${accessToken}`,
-                                "X-IBM-Client-Id":
-                                    this.configService.get<string>(
-                                        "EUIPO_CLIENT_ID"
-                                    )
+                const fetchResult = await this.retryService.retry(
+                    () =>
+                        this.fetchService.json<EuipoTrademarkResult>(
+                            `${euipoUrl}?query=${encodeURIComponent(query)}&size=${size}&page=${page}`,
+                            {
+                                method: "GET",
+                                headers: {
+                                    Authorization: `Bearer ${accessToken.access_token}`,
+                                    "Content-Type": "application/json",
+                                    "X-IBM-Client-Id":
+                                        this.configService.get<string>(
+                                            "OAUTH_CLIENT_ID"
+                                        )
+                                }
                             }
-                        }
-                    )
+                        ),
+                    {
+                        retries: 5,
+                        delay: 1000,
+                        exponentialBackoff: true,
+                        timeout: 10000
+                    }
+                )
 
                 return fetchResult.cata({
                     Ok: data => Ok(data),

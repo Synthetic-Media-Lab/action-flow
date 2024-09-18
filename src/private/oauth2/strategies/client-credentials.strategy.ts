@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config"
 import { Err, Ok, Result } from "pratica"
 import { FetchService } from "../../fetch/fetch.service"
 import { OAuthToken } from "../interface/oauth2.interface"
+import { UnauthorizedError } from "src/error/unauthorized.error"
 
 @Injectable()
 export class ClientCredentialsStrategy {
@@ -14,7 +15,7 @@ export class ClientCredentialsStrategy {
     ) {}
 
     public async getAccessToken<T extends OAuthToken = OAuthToken>(): Promise<
-        Result<T, Error>
+        Result<T, Error | UnauthorizedError>
     > {
         const tokenUrl = this.configService.get<string>("OAUTH_TOKEN_URL")
         const clientId = this.configService.get<string>("OAUTH_CLIENT_ID")

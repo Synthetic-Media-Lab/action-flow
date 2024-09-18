@@ -1,7 +1,10 @@
 import { Result } from "pratica"
+import { UnauthorizedError } from "src/error/unauthorized.error"
 
 export interface IOAuth2Service {
-    getAccessToken<T extends OAuthToken>(): Promise<Result<T, Error>>
+    getAccessToken<T extends OAuthToken>(): Promise<
+        Result<T, Error | UnauthorizedError>
+    >
     getAccessTokenWithAuthCode<T extends OAuthToken>(
         code: string,
         redirectUri: string

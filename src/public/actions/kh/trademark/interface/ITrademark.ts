@@ -39,6 +39,11 @@ export enum EuipoTrademarkStatus {
     REMOVED_FROM_REGISTER = "REMOVED_FROM_REGISTER"
 }
 
+export enum EuipoTrademarkSearchStrategy {
+    EXACT = "EXACT",
+    FUZZY = "FUZZY"
+}
+
 export interface EuipoTrademarkResult {
     name: string
     status: EuipoTrademarkStatus
