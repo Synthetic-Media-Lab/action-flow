@@ -34,7 +34,20 @@ module.exports = {
         "prettier/prettier": 2,
         "@typescript-eslint/no-unused-vars": "off",
         "unused-imports/no-unused-imports": "error",
-        "neverthrow/must-use-result": "error"
+        "neverthrow/must-use-result": "error",
+        "no-restricted-imports": [
+            "error",
+            {
+                paths: [
+                    {
+                        name: "pratica",
+                        importNames: ["Result"],
+                        message:
+                            "Please use neverthrow's Result instead of Pratica's Result."
+                    }
+                ]
+            }
+        ]
     },
     overrides: [
         {
