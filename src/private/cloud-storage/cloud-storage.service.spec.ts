@@ -6,7 +6,7 @@ import { CLOUD_STORAGE_PROVIDER } from "./cloud-storage.providers"
 import { CloudStorageService } from "./google-cloud-storage.service"
 import { ICloudStorage } from "./interface/ICloudStorage"
 import { mockFileMetadata } from "./mock/google-storage"
-import { CloudDataFile, CloudMetadataFile } from "./types/CloudFileTypes"
+import { CloudDataFile, CloudMetadataFile } from "./types/cloud-fIle-types"
 
 describe("CloudStorageService", () => {
     let service: CloudStorageService

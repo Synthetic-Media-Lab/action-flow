@@ -1,6 +1,6 @@
 import { Result } from "pratica"
-import { CloudDataFile, CloudMetadataFile } from "../types/CloudFileTypes"
-import { CloudStorageError } from "../types/CloudStorageError"
+import { CloudDataFile, CloudMetadataFile } from "../types/cloud-fIle-types"
+import { CloudStorageError } from "../types/cloud-storage-error"
 
 export interface ICloudStorage {
     getFile(path: string): Promise<Result<CloudDataFile, CloudStorageError>>
