@@ -1,5 +1,5 @@
 export class FetchError extends Error {
-    readonly type = "fetch-error"
+    readonly type: string = "fetch-error"
     readonly statusCode?: number
 
     constructor(message: string, statusCode?: number) {

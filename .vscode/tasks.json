@@ -7,13 +7,13 @@
             "command": "./llm-concat-script/concat_files_for_llm.sh",
             "args": [
                 "-d",
-                "src/private/oauth2,src/public/actions/kh/trademark",
+                "src/private/cloud-storage,src/error",
                 "-t",
                 "bash -c \"tree -a . -I \\\"node_modules|dist|coverage|storybook-static|sanity|.git\\\" -L 5 | grep -v './public'\"",
                 "-o",
                 "llm_output.txt",
                 "-e",
-                "e2e,spec",
+                "e2e",
                 "-p",
                 "package.json"
             ],

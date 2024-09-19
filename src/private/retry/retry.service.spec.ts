@@ -27,7 +27,7 @@ describe("RetryService", () => {
             return "Success"
         })
 
-        const options: IRetryOptions = { retries: 5, delay: 0 }
+        const options: IRetryOptions<string, Error> = { retries: 5, delay: 0 }
         const result = await service.retry(failingFunction, options)
         expect(result).toBe("Success")
         expect(failingFunction).toHaveBeenCalledTimes(3)
@@ -36,7 +36,7 @@ describe("RetryService", () => {
     it("should succeed on the first attempt without retries", async () => {
         const successfulFunction = jest.fn(async () => "Immediate Success")
 
-        const options: IRetryOptions = { retries: 3, delay: 0 }
+        const options: IRetryOptions<string, Error> = { retries: 3, delay: 0 }
         const result = await service.retry(successfulFunction, options)
         expect(result).toBe("Immediate Success")
         expect(successfulFunction).toHaveBeenCalledTimes(1)
@@ -47,7 +47,7 @@ describe("RetryService", () => {
             throw new Error("Always fails")
         })
 
-        const options: IRetryOptions = { retries: 2, delay: 0 }
+        const options: IRetryOptions<unknown, Error> = { retries: 2, delay: 0 }
         await expect(service.retry(failingFunction, options)).rejects.toThrow(
             "Always fails"
         )
@@ -59,7 +59,7 @@ describe("RetryService", () => {
             throw new Error("Negative retries")
         })
 
-        const options: IRetryOptions = { retries: -1, delay: 0 }
+        const options: IRetryOptions<unknown, Error> = { retries: -1, delay: 0 }
         await expect(service.retry(failingFunction, options)).rejects.toThrow(
             "Negative retries"
         )
@@ -71,7 +71,7 @@ describe("RetryService", () => {
             throw new Error("Always fails")
         })
 
-        const options: IRetryOptions = { retries: 5, delay: 0 }
+        const options: IRetryOptions<unknown, Error> = { retries: 5, delay: 0 }
         await expect(service.retry(failingFunction, options)).rejects.toThrow(
             "Always fails"
         )
@@ -85,7 +85,10 @@ describe("RetryService", () => {
             throw new Error("Delayed failure")
         })
 
-        const options: IRetryOptions = { retries: 1, delay: 1000 }
+        const options: IRetryOptions<unknown, Error> = {
+            retries: 1,
+            delay: 1000
+        }
         await expect(service.retry(failingFunction, options)).rejects.toThrow(
             "Delayed failure"
         )
@@ -105,7 +108,7 @@ describe("RetryService", () => {
             return "Eventual Success"
         })
 
-        const options: IRetryOptions = { retries: 5, delay: 500 }
+        const options: IRetryOptions<string, Error> = { retries: 5, delay: 500 }
         const result = await service.retry(intermittentFunction, options)
 
         expect(result).toBe("Eventual Success")
@@ -123,7 +126,7 @@ describe("RetryService", () => {
             throw new Error("Exponential failure")
         })
 
-        const options: IRetryOptions = {
+        const options: IRetryOptions<unknown, Error> = {
             retries: 3,
             delay: 100,
             exponentialBackoff: true
@@ -138,7 +141,8 @@ describe("RetryService", () => {
     })
 
     it("should retry only on specific errors", async () => {
-        const retryOn = (error: Error) => error.message === "Retryable error"
+        const retryOnError = (error: Error) =>
+            error.message === "Retryable error"
         let attempts = 0
         const retryableFunction = jest.fn(async () => {
             attempts++
@@ -147,10 +151,10 @@ describe("RetryService", () => {
             )
         })
 
-        const options: IRetryOptions = {
+        const options: IRetryOptions<unknown, Error> = {
             retries: 2,
             delay: 100,
-            retryOn
+            retryOnError
         }
 
         await expect(service.retry(retryableFunction, options)).rejects.toThrow(
@@ -159,35 +163,22 @@ describe("RetryService", () => {
         expect(retryableFunction).toHaveBeenCalledTimes(1)
     })
 
-    interface CustomError extends Error {
-        statusCode?: number
-    }
-
-    it("should retry on 401 Unauthorized status", async () => {
-        const retryOn = (error: CustomError) => error.statusCode === 401
-
+    it("should retry based on result conditions, e.g. a status code of 401", async () => {
         let attempts = 0
-        const retryableFunction = jest.fn(async () => {
+        const resultFunction = jest.fn(async () => {
             attempts++
-            const error: CustomError = new Error("Unauthorized error")
-            error.statusCode = attempts === 1 ? 401 : 500 // First attempt 401, second 500
-            throw error
+            return { statusCode: attempts === 1 ? 401 : 200 }
         })
 
-        const options: IRetryOptions = {
+        const options: IRetryOptions<{ statusCode: number }, Error> = {
             retries: 2,
             delay: 100,
-            retryOn
+            retryOnResult: result => result.statusCode === 401
         }
 
-        await expect(service.retry(retryableFunction, options)).rejects.toThrow(
-            expect.objectContaining({
-                message: "Unauthorized error",
-                statusCode: 500
-            })
-        )
-
-        expect(retryableFunction).toHaveBeenCalledTimes(2) // Called twice due to 401 on first attempt
+        const result = await service.retry(resultFunction, options)
+        expect(result).toEqual({ statusCode: 200 })
+        expect(resultFunction).toHaveBeenCalledTimes(2)
     })
 
     it("should stop retrying after the global timeout", async () => {
@@ -199,7 +190,7 @@ describe("RetryService", () => {
             throw new Error("Any error")
         })
 
-        const options: IRetryOptions = {
+        const options: IRetryOptions<unknown, Error> = {
             retries: 5,
             delay: 500,
             timeout: 1000

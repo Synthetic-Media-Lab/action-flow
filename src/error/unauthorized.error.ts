@@ -1,8 +1,10 @@
-export class UnauthorizedError extends Error {
-    readonly statusCode = 401
+import { FetchError } from "./fetch.error"
+
+export class UnauthorizedError extends FetchError {
     readonly type = "unauthorized"
 
     constructor(message: string) {
-        super(message)
+        super(message, 401)
+        this.name = "UnauthorizedError"
     }
 }

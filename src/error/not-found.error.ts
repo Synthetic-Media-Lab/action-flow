@@ -1,7 +1,10 @@
-export class NotFoundError extends Error {
+import { FetchError } from "./fetch.error"
+
+export class NotFoundError extends FetchError {
     readonly type = "not-found"
 
     constructor(message: string) {
-        super(message)
+        super(message, 404)
+        this.name = "NotFoundError"
     }
 }

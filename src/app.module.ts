@@ -10,6 +10,7 @@ import { AiAnalysisModule } from "./public/actions/kh/ai-analysis/ai-analysis.mo
 import { DomainAvailabilityModule } from "./public/actions/kh/domain-availability/domain-availability.module"
 import { TrademarkModule } from "./public/actions/kh/trademark/trademark.module"
 import { RetryModule } from "./private/retry/retry.module"
+import { CloudStorageModule } from "./private/cloud-storage/cloud-storage.module"
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { RetryModule } from "./private/retry/retry.module"
         GenAIModule,
         DomainAvailabilityModule,
         TrademarkModule,
+        CloudStorageModule,
         AiAnalysisModule
     ],
     controllers: [AppController],

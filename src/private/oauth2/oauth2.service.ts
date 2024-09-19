@@ -43,15 +43,11 @@ export class OAuth2Service implements IOAuth2Service {
         >(() => this.clientCredentialsStrategy.getAccessToken(), {
             retries: 5,
             delay: 1000,
-            exponentialBackoff: true,
-            retryOn: (error: AppError) => {
-                if (error instanceof UnauthorizedError) {
-                    this.logger.debug(
-                        "Received UnauthorizedError (401), retrying..."
-                    )
-                }
-                return true
-            }
+            retryOnResult: (result: Result<T, Error | UnauthorizedError>) =>
+                result.cata({
+                    Ok: () => false,
+                    Err: error => error instanceof UnauthorizedError
+                })
         })
 
         return tokenResult.cata({

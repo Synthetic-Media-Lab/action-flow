@@ -12,6 +12,7 @@ import {
     EuipoTrademarkSearchStrategy
 } from "./interface/ITrademark"
 import { RetryService } from "src/private/retry/retry.service"
+import { FetchError } from "src/error/fetch.error"
 
 @Injectable()
 export class TrademarkService implements ITrademark {
@@ -102,8 +103,21 @@ export class TrademarkService implements ITrademark {
                     {
                         retries: 5,
                         delay: 1000,
-                        exponentialBackoff: true,
-                        timeout: 10000
+                        retryOnResult: result =>
+                            result.cata({
+                                Ok: () => false,
+                                Err: error => {
+                                    if (error instanceof FetchError) {
+                                        const statusCode = error.statusCode
+                                        return (
+                                            statusCode === 401 ||
+                                            (statusCode >= 500 &&
+                                                statusCode < 600)
+                                        )
+                                    }
+                                    return false
+                                }
+                            })
                     }
                 )
 

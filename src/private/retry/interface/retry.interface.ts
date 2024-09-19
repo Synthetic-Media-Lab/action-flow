@@ -1,15 +1,16 @@
-export interface IRetryOptions<E extends Error = Error> {
+export interface IRetryOptions<T = unknown, E extends Error = Error> {
     retries: number
     delay?: number
     exponentialBackoff?: boolean
-    retryOn?: (error: E) => boolean
+    retryOnError?: (error: E) => boolean
+    retryOnResult?: (result: T) => boolean
     timeout?: number
 }
 
 export interface IRetry {
-    retry<T, E extends Error = Error>(
+    retry<T = unknown, E extends Error = Error>(
         fn: () => Promise<T>,
-        options: IRetryOptions<E>
+        options: IRetryOptions<T, E>
     ): Promise<T>
     delay(ms: number): Promise<void>
 }

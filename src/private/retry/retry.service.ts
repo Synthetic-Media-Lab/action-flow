@@ -5,9 +5,9 @@ import { IRetry, IRetryOptions } from "./interface/retry.interface"
 export class RetryService implements IRetry {
     private readonly logger = new Logger(RetryService.name)
 
-    async retry<T, E extends Error = Error>(
+    async retry<T = unknown, E extends Error = Error>(
         fn: () => Promise<T>,
-        options: IRetryOptions<E>
+        options: IRetryOptions<T, E>
     ): Promise<T> {
         const retries = Math.max(0, options.retries)
         const delay = Math.max(0, options.delay || 0)
@@ -23,14 +23,40 @@ export class RetryService implements IRetry {
                 this.logger.debug(
                     `Attempting function, retries left: ${retriesLeft}`
                 )
-                return await fn()
+
+                const result = await fn()
+
+                if (options.retryOnResult && options.retryOnResult(result)) {
+                    if (retriesLeft > 0) {
+                        const currentDelay = options.exponentialBackoff
+                            ? delay * (retries - retriesLeft + 1)
+                            : delay
+
+                        this.logger.debug(
+                            `Retrying in ${currentDelay}ms... Retries left: ${retriesLeft - 1}`
+                        )
+
+                        if (currentDelay) {
+                            await this.delay(currentDelay)
+                        }
+
+                        return attempt(retriesLeft - 1)
+                    } else {
+                        this.logger.debug(
+                            `No retries left for retryable result. Returning result: ${result}`
+                        )
+                    }
+                }
+
+                return result
             } catch (error) {
                 this.logger.debug(
                     `Error encountered: ${error.message}. Retries left: ${retriesLeft}`
                 )
 
                 const shouldRetry =
-                    !options.retryOn || options.retryOn(error as E)
+                    !options.retryOnError || options.retryOnError(error as E)
+
                 if (!shouldRetry || retriesLeft <= 0) {
                     this.logger.debug(
                         `No retries left or error is not retryable. Throwing error: ${error.message}`
