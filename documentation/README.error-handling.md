@@ -133,40 +133,6 @@ module.exports = {
 
 This configuration enforces handling of all `Result` objects in production code, while allowing you to disable the rule in specific files such as test files.
 
-## Restricting the Use of Pratica's `Result`
-
-To ensure that developers only use **neverthrow's `Result`** and avoid mistakenly using **Pratica's `Result`**, we have configured ESLint to restrict the import of `Result` from the Pratica library.
-
-Here is the configuration in our `.eslintrc.js`:
-
-```javascript
-module.exports = {
-    rules: {
-        "no-restricted-imports": [
-            "error",
-            {
-                paths: [
-                    {
-                        name: "pratica",
-                        importNames: ["Result"],
-                        message:
-                            "Please use neverthrow's Result instead of Pratica's Result."
-                    }
-                ]
-            }
-        ]
-    }
-}
-```
-
-With this rule in place, any attempt to import `Result` from `pratica` will trigger an ESLint error:
-
-```
-'Result' import from 'pratica' is restricted. Please use neverthrow's Result instead of Pratica's Result.
-```
-
-This helps maintain consistency in the codebase by enforcing the usage of **neverthrow's `Result`** for error handling.
-
 ---
 
 ## Optional Value Handling with `Maybe` Type
@@ -201,6 +167,40 @@ return toolCall.cata({
 ```
 
 If you need to handle optional values like this, you can integrate the **Pratica** library in your codebase for `Maybe` types.
+
+## Restricting the Use of Pratica's `Result`
+
+To ensure that developers only use **neverthrow's `Result`** and avoid mistakenly using **Pratica's `Result`**, we have configured ESLint to restrict the import of `Result` from the Pratica library.
+
+Here is the configuration in our `.eslintrc.js`:
+
+```javascript
+module.exports = {
+    rules: {
+        "no-restricted-imports": [
+            "error",
+            {
+                paths: [
+                    {
+                        name: "pratica",
+                        importNames: ["Result"],
+                        message:
+                            "Please use neverthrow's Result instead of Pratica's Result."
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
+
+With this rule in place, any attempt to import `Result` from `pratica` will trigger an ESLint error:
+
+```
+'Result' import from 'pratica' is restricted. Please use neverthrow's Result instead of Pratica's Result.
+```
+
+This helps maintain consistency in the codebase by enforcing the usage of **neverthrow's `Result`** for error handling.
 
 ---
 
