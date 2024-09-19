@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Result, Ok, Err } from "pratica"
+import { Result, ok, err } from "neverthrow"
 import { IGoogleSheet } from "./interface/IGoogleSheet"
 import { GoogleSheetError } from "./error"
 import { NotFoundError } from "src/error/not-found.error"
@@ -39,7 +39,7 @@ export class GoogleSheetService implements IGoogleSheet {
                 this.logger.error(
                     "Google Cloud Platform service account key not found"
                 )
-                return Err(new Error("Could not connect to Google Sheets"))
+                return err(new Error("Could not connect to Google Sheets"))
             }
 
             const sheets = await this.getGoogleSheetClient()
@@ -64,7 +64,7 @@ export class GoogleSheetService implements IGoogleSheet {
 
             if (!response?.data?.values) {
                 this.logger.warn("No data found.")
-                return Err(
+                return err(
                     new NotFoundError("No data found in the Google Sheet")
                 )
             }
@@ -76,15 +76,15 @@ export class GoogleSheetService implements IGoogleSheet {
                 data.length > 5 ? data.slice(0, 5) : data
             )
 
-            return Ok([...data])
+            return ok([...data])
         } catch (error) {
             this.logger.error("Error fetching data from Google Sheets:", error)
 
             if (error.code === 404) {
-                return Err(new NotFoundError("Google Sheet not found"))
+                return err(new NotFoundError("Google Sheet not found"))
             }
 
-            return Err(new Error("Failed to fetch data from Google Sheets"))
+            return err(new Error("Failed to fetch data from Google Sheets"))
         }
     }
 }

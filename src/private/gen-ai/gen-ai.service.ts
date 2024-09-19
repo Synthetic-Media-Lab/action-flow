@@ -8,7 +8,7 @@ import {
     GenerateTextResult,
     LanguageModelV1
 } from "ai"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { GenAIError } from "./error/gen-ai.error"
 import { IGenAI } from "./interface/gen-ai.interface"
 import { CallSettings, OpenAIChatModelId } from "./types/types"
@@ -79,11 +79,11 @@ export class GenAIService<TOOLS extends Record<string, CoreTool>>
                 `Tool calls: ${JSON.stringify(toolCalls, null, 2)}`
             )
 
-            return Ok(result)
+            return ok(result)
         } catch (error) {
             this.logger.error(`Failed to generate text: ${error.message}`)
 
-            return Err(
+            return err(
                 new GenAIError("Failed to generate text using Vercel AI")
             )
         }

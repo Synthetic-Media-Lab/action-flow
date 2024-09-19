@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import puppeteer from "puppeteer"
 import {
     IPuppeteerService,
@@ -50,13 +50,13 @@ export class PuppeteerService implements IPuppeteerService {
             const visibleContent = pageContent.substring(0, 1000)
 
             await browser.close()
-            return Ok(`Page content: ${visibleContent}`)
+            return ok(`Page content: ${visibleContent}`)
         } catch (error) {
             this.logger.error(
                 `Failed to access page: ${error.message}`,
                 error.stack
             )
-            return Err(new Error("Failed to access page."))
+            return err(new Error("Failed to access page."))
         }
     }
 
@@ -95,13 +95,13 @@ export class PuppeteerService implements IPuppeteerService {
 
             await browser.close()
 
-            return Ok(screenshotPath)
+            return ok(screenshotPath)
         } catch (error) {
             this.logger.error(
                 `Failed to take screenshot: ${error.message}`,
                 error.stack
             )
-            return Err(new Error("Failed to take screenshot"))
+            return err(new Error("Failed to take screenshot"))
         }
     }
 

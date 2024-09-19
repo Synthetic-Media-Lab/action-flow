@@ -1,5 +1,5 @@
 import { IAIFunctionCall } from "../interface/IAIFunctionCall"
-import { Result, Ok, Err } from "pratica"
+import { Result, ok, err } from "neverthrow"
 import { AIError } from "src/private/ai/error/ai.error"
 
 interface GetWeatherArgs {
@@ -19,13 +19,13 @@ export const getWeatherHandler: IAIFunctionCall<GetWeatherArgs> = {
             )
 
             if (!response.ok) {
-                return Err(new AIError("Failed to fetch weather data"))
+                return err(new AIError("Failed to fetch weather data"))
             }
 
             const weatherData = await response.json()
             const currentWeather = weatherData.current_weather
 
-            return Ok(
+            return ok(
                 JSON.stringify({
                     latitude,
                     longitude,
@@ -34,7 +34,7 @@ export const getWeatherHandler: IAIFunctionCall<GetWeatherArgs> = {
                 })
             )
         } catch (error) {
-            return Err(new AIError("Error retrieving weather data"))
+            return err(new AIError("Error retrieving weather data"))
         }
     }
 }

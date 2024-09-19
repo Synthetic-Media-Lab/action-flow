@@ -40,9 +40,9 @@ export class TrademarkController {
 
         const result = await this.trademarkService.checkEuipo(checkTrademarkDto)
 
-        return result.cata({
-            Ok: result => result,
-            Err: error => {
+        return result.match(
+            result => result,
+            error => {
                 this.logger.error(
                     `Error checking EUIPO trademark: ${error.message}`
                 )
@@ -55,6 +55,6 @@ export class TrademarkController {
                     HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 }

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { FetchService } from "../../fetch/fetch.service"
 import { OAuthToken } from "../interface/oauth2.interface"
 import { UnauthorizedError } from "src/error/unauthorized.error"
@@ -44,14 +44,14 @@ export class ClientCredentialsStrategy {
             }
         })
 
-        return fetchResult.cata({
-            Ok: data => Ok(data),
-            Err: error =>
-                Err(
+        return fetchResult.match(
+            data => ok(data),
+            error =>
+                err(
                     new Error(
                         `Failed to retrieve access token: ${error.message}`
                     )
                 )
-        })
+        )
     }
 }

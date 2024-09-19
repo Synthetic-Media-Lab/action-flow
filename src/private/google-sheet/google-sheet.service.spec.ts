@@ -1,7 +1,7 @@
 import { ConfigModule, ConfigService } from "@nestjs/config"
 import { Test, TestingModule } from "@nestjs/testing"
 import { google } from "googleapis"
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { NotFoundError } from "src/error/not-found.error"
 import { GoogleSheetError } from "./error"
 import { GoogleSheetService } from "./google-sheet.service"

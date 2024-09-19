@@ -1,5 +1,5 @@
 import { Controller, Get, HttpException, Logger, Query } from "@nestjs/common"
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { PuppeteerService } from "./puppeteer.service"
 
 @Controller("puppeteer")
@@ -15,15 +15,15 @@ export class PuppeteerController {
         const result: Result<string, Error> =
             await this.puppeteerService.testCheckPageContent()
 
-        return result.cata({
-            Ok: (message: string) => message,
-            Err: (error: Error) => {
+        return result.match(
+            (message: string) => message,
+            (error: Error) => {
                 this.logger.error(
                     `Error checking page content: ${error.message}`
                 )
                 throw new HttpException("Failed to check page content", 500)
             }
-        })
+        )
     }
 
     @Get("take-screenshot")
@@ -44,15 +44,15 @@ export class PuppeteerController {
         const result: Result<string, Error> =
             await this.puppeteerService.takeScreenshot(options)
 
-        return result.cata({
-            Ok: (screenshotPath: string) => {
+        return result.match(
+            (screenshotPath: string) => {
                 this.logger.debug(`Screenshot saved at: ${screenshotPath}`)
                 return screenshotPath
             },
-            Err: (error: Error) => {
+            (error: Error) => {
                 this.logger.error(`Error taking screenshot: ${error.message}`)
                 throw new HttpException("Failed to take screenshot", 500)
             }
-        })
+        )
     }
 }

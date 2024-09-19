@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { UnauthorizedError } from "src/error/unauthorized.error"
 
 export interface IOAuth2Service {

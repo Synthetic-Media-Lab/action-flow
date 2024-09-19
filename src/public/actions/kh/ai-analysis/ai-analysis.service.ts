@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { AiAnalysisDto } from "./dto/ai-analysis.dto"
 import { AiAnalysisError } from "./error/ai-analysis.error"
 import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
@@ -22,7 +22,7 @@ export class AiAnalysisService implements IAiAnalysisService {
         this.logger.debug(`Analyzing text: ${text}`)
 
         if (!text) {
-            return Err(new AiAnalysisError("Text is required for analysis"))
+            return err(new AiAnalysisError("Text is required for analysis"))
         }
 
         const analysis = await this.ai.generateText([
@@ -32,15 +32,15 @@ export class AiAnalysisService implements IAiAnalysisService {
             }
         ])
 
-        return analysis.cata({
-            Ok: result => Ok({ text: result.text }),
-            Err: error => {
+        return analysis.match(
+            result => ok({ text: result.text }),
+            error => {
                 this.logger.error(
                     `Error checking WIPO trademark: ${error.message}`
                 )
 
-                return Err(new AiAnalysisError(error.message))
+                return err(new AiAnalysisError(error.message))
             }
-        })
+        )
     }
 }

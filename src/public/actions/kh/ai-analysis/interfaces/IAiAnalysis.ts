@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { AiAnalysisDto } from "../dto/ai-analysis.dto"
 import { AiAnalysisError } from "../error/ai-analysis.error"
 

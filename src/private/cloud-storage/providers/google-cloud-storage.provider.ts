@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Result, Ok, Err } from "pratica"
+import { Result, ok, err } from "neverthrow"
 import { CloudDataFile, CloudMetadataFile } from "../types/cloud-fIle-types"
 import { CloudStorageError } from "../types/cloud-storage-error"
 import { ConfigService } from "@nestjs/config"
@@ -33,7 +33,7 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             const [exists] = await file.exists()
             if (!exists) {
-                return Err(new NotFoundError(`File not found at path: ${path}`))
+                return err(new NotFoundError(`File not found at path: ${path}`))
             }
 
             const [metadata] = await file.getMetadata()
@@ -50,12 +50,12 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
                 data: contents.toString()
             })
 
-            return Ok(dataFile)
+            return ok(dataFile)
         } catch (error) {
             this.logger.error(
                 `Error getting file at path ${path}: ${error.message}`
             )
-            return Err(new InvalidInputError(error.message))
+            return err(new InvalidInputError(error.message))
         }
     }
 
@@ -70,7 +70,7 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
                 })
 
             if (files.length === 0) {
-                return Err(new NotFoundError(`No files found at path: ${path}`))
+                return err(new NotFoundError(`No files found at path: ${path}`))
             }
 
             const metadataFiles = files.map(file =>
@@ -86,12 +86,12 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
                 })
             )
 
-            return Ok(metadataFiles)
+            return ok(metadataFiles)
         } catch (error) {
             this.logger.error(
                 `Error getting files at path ${path}: ${error.message}`
             )
-            return Err(new InvalidInputError(error.message))
+            return err(new InvalidInputError(error.message))
         }
     }
 
@@ -106,12 +106,12 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             await file.save(fileContent)
 
-            return Ok(`File uploaded to ${destination}`)
+            return ok(`File uploaded to ${destination}`)
         } catch (error) {
             this.logger.error(
                 `Error uploading file to ${destination}: ${error.message}`
             )
-            return Err(new InvalidInputError(error.message))
+            return err(new InvalidInputError(error.message))
         }
     }
 
@@ -121,17 +121,17 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             const [exists] = await file.exists()
             if (!exists) {
-                return Err(new NotFoundError(`File not found at path: ${path}`))
+                return err(new NotFoundError(`File not found at path: ${path}`))
             }
 
             await file.delete()
 
-            return Ok(`File deleted at ${path}`)
+            return ok(`File deleted at ${path}`)
         } catch (error) {
             this.logger.error(
                 `Error deleting file at ${path}: ${error.message}`
             )
-            return Err(new InvalidInputError(error.message))
+            return err(new InvalidInputError(error.message))
         }
     }
 
@@ -146,12 +146,12 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
                     maxResults: 1
                 })
 
-            return Ok(files.length === 0)
+            return ok(files.length === 0)
         } catch (error) {
             this.logger.error(
                 `Error checking if directory is empty at ${path}: ${error.message}`
             )
-            return Err(new InvalidInputError(error.message))
+            return err(new InvalidInputError(error.message))
         }
     }
 }

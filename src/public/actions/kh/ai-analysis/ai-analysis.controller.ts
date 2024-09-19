@@ -36,9 +36,9 @@ export class AiAnalysisController {
 
         const result = await this.aiAnalysisService.run(aiAnalysisDto)
 
-        return result.cata({
-            Ok: res => res,
-            Err: error => {
+        return result.match(
+            res => res,
+            error => {
                 this.logger.error(`Error in AI analysis: ${error.message}`)
 
                 throw new HttpException(
@@ -49,6 +49,6 @@ export class AiAnalysisController {
                     HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 }

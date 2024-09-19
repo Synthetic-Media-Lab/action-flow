@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { CloudDataFile, CloudMetadataFile } from "../types/cloud-fIle-types"
 import { CloudStorageError } from "../types/cloud-storage-error"
 

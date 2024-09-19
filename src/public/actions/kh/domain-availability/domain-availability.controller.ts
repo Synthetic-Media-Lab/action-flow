@@ -40,9 +40,9 @@ export class DomainAvailabilityController {
             checkDomainAvailabilityDto
         )
 
-        return result.cata({
-            Ok: result => result,
-            Err: error => {
+        return result.match(
+            result => result,
+            error => {
                 this.logger.error(
                     `Error checking domain availability: ${error.message}`
                 )
@@ -55,6 +55,6 @@ export class DomainAvailabilityController {
                     HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 }

@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { CreateActionADto } from "../dto/create-action-a.dto"
 import { ActionAAsyncError } from "../error"
 import { ActionAError } from "../error/action-a.error"

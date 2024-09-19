@@ -5,7 +5,6 @@ import { ActionAModule } from "./action-a.module"
 import { CreateActionADto } from "./dto/create-action-a.dto"
 import { ACTION_A_SERVICE_TOKEN } from "./action-a.providers"
 import { ActionAService } from "./action-a.service"
-import { Err, Ok } from "pratica"
 import { NotFoundError } from "src/error/not-found.error"
 
 describe("ActionAController (e2e)", () => {
@@ -65,7 +64,7 @@ describe("ActionAController (e2e)", () => {
             }
 
             jest.spyOn(service, "simulateAsyncOperation").mockResolvedValueOnce(
-                Ok(undefined)
+                ok(undefined)
             )
 
             const response = await request(app.getHttpServer())
@@ -85,7 +84,7 @@ describe("ActionAController (e2e)", () => {
             }
 
             jest.spyOn(service, "simulateAsyncOperation").mockResolvedValueOnce(
-                Err(new NotFoundError("Simulated async not found"))
+                err(new NotFoundError("Simulated async not found"))
             )
 
             await request(app.getHttpServer())

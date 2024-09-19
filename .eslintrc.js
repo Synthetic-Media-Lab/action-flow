@@ -9,7 +9,8 @@ module.exports = {
         "@typescript-eslint/eslint-plugin",
         "prettier",
         "jest",
-        "unused-imports"
+        "unused-imports",
+        "neverthrow"
     ],
     extends: [
         "eslint:recommended",
@@ -32,6 +33,15 @@ module.exports = {
         "no-console": 1,
         "prettier/prettier": 2,
         "@typescript-eslint/no-unused-vars": "off",
-        "unused-imports/no-unused-imports": "error"
-    }
+        "unused-imports/no-unused-imports": "error",
+        "neverthrow/must-use-result": "error"
+    },
+    overrides: [
+        {
+            files: ["*.spec.ts"],
+            rules: {
+                "neverthrow/must-use-result": "off"
+            }
+        }
+    ]
 }

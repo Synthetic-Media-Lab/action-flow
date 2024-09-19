@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { RetryService } from "../retry/retry.service"
 import { IOAuth2Service, OAuthToken } from "./interface/oauth2.interface"
 import { AuthorizationCodeStrategy } from "./strategies/authorization-code.strategy"
@@ -29,7 +29,7 @@ export class OAuth2Service implements IOAuth2Service {
             this.logger.debug(`Using cached token: ${this.token}`)
             this.logger.debug(`Token expiry time: ${this.tokenExpiry}`)
 
-            return Ok({
+            return ok({
                 access_token: this.token,
                 expires_in: this.tokenExpiry.getTime()
             } as T)
@@ -44,14 +44,14 @@ export class OAuth2Service implements IOAuth2Service {
             retries: 5,
             delay: 1000,
             retryOnResult: (result: Result<T, Error | UnauthorizedError>) =>
-                result.cata({
-                    Ok: () => false,
-                    Err: error => error instanceof UnauthorizedError
-                })
+                result.match(
+                    () => false,
+                    error => error instanceof UnauthorizedError
+                )
         })
 
-        return tokenResult.cata({
-            Ok: token => {
+        return tokenResult.match(
+            token => {
                 this.logger.debug(
                     "Received new access token:",
                     token.access_token
@@ -68,15 +68,15 @@ export class OAuth2Service implements IOAuth2Service {
                     `Token expiry date set to: ${this.tokenExpiry}`
                 )
 
-                return Ok(token as T)
+                return ok(token as T)
             },
-            Err: error => {
+            error => {
                 this.logger.error(
                     `Error retrieving access token: ${error.message}`
                 )
-                return Err(error)
+                return err(error)
             }
-        })
+        )
     }
 
     // Authorization Code Flow
@@ -90,16 +90,16 @@ export class OAuth2Service implements IOAuth2Service {
                 redirectUri
             )
 
-        return tokenResult.cata({
-            Ok: token => {
+        return tokenResult.match(
+            token => {
                 this.token = token.access_token
                 this.tokenExpiry = new Date(
                     Date.now() + (token.expires_in - 60) * 1000
                 )
-                return Ok(token as T)
+                return ok(token as T)
             },
-            Err: error => Err(error)
-        })
+            error => err(error)
+        )
     }
 
     // Refresh Token Flow
@@ -111,15 +111,15 @@ export class OAuth2Service implements IOAuth2Service {
                 refreshToken
             )
 
-        return tokenResult.cata({
-            Ok: token => {
+        return tokenResult.match(
+            token => {
                 this.token = token.access_token
                 this.tokenExpiry = new Date(
                     Date.now() + (token.expires_in - 60) * 1000
                 )
-                return Ok(token as T)
+                return ok(token as T)
             },
-            Err: error => Err(error)
-        })
+            error => err(error)
+        )
     }
 }

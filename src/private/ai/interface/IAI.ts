@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { AIError } from "../error/ai.error"
 
 export type AICustomOptions = {

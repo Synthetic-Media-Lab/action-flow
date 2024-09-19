@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Result, Ok, Err } from "pratica"
+import { Result, ok, err } from "neverthrow"
 import { AIError } from "../../error/ai.error"
 import OpenAI from "openai"
 import { ConfigService } from "@nestjs/config"
@@ -70,13 +70,13 @@ export class OpenAIService
 
             const message = completion?.choices?.[0]?.message?.content || ""
 
-            return Ok({
+            return ok({
                 rawResponse: completion,
                 generatedText: message
             })
         } catch (error) {
             this.logger.error(`Failed to generate text: ${error.message}`)
-            return Err(new AIError("Failed to generate text using OpenAI"))
+            return err(new AIError("Failed to generate text using OpenAI"))
         }
     }
 
@@ -131,8 +131,8 @@ export class OpenAIService
                             toolCall
                         )
 
-                    return functionCallResult.cata({
-                        Ok: async value => {
+                    return functionCallResult.match(
+                        async value => {
                             this.logger.debug(
                                 `[generateTextWithTools] Function call successful, structured data: ${value.generatedText}`
                             )
@@ -149,23 +149,23 @@ export class OpenAIService
 
                             return summaryResult
                         },
-                        Err: err => {
+                        error => {
                             this.logger.error(
-                                `[generateTextWithTools] Function call failed: ${err.message}`
+                                `[generateTextWithTools] Function call failed: ${error.message}`
                             )
-                            return Err(
+                            return err(
                                 new AIError(
-                                    `Function call failed: ${err.message}`
+                                    `Function call failed: ${error.message}`
                                 )
                             )
                         }
-                    })
+                    )
                 },
                 Nothing: () => {
                     this.logger.debug(
                         "[generateTextWithTools] No tool call detected"
                     )
-                    return Ok({
+                    return ok({
                         rawResponse: completion,
                         generatedText: message,
                         toolCall: undefined
@@ -176,7 +176,7 @@ export class OpenAIService
             this.logger.error(
                 `[generateTextWithTools] Failed to generate text: ${error.message}`
             )
-            return Err(new AIError("Failed to generate text using OpenAI"))
+            return err(new AIError("Failed to generate text using OpenAI"))
         }
     }
 }

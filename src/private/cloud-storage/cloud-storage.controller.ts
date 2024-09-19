@@ -28,29 +28,30 @@ export class CloudStorageController {
     @Get("file")
     async getFile(@Query() query: GetCloudStorageFileInput) {
         const result = await this.cloudStorageService.getFile(query.path)
-        return result.cata({
-            Ok: value => value,
-            Err: error => {
+
+        return result.match(
+            value => value,
+            error => {
                 throw new HttpException(
                     error.message,
                     error.statusCode || HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 
     @Get("files")
     async getFiles(@Query() query: GetCloudStorageFileInput) {
         const result = await this.cloudStorageService.getFiles(query.path)
-        return result.cata({
-            Ok: value => value,
-            Err: error => {
+        return result.match(
+            value => value,
+            error => {
                 throw new HttpException(
                     error.message,
                     error.statusCode || HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 
     @Post("file")
@@ -63,42 +64,42 @@ export class CloudStorageController {
             body.fileContent,
             body.destination
         )
-        return result.cata({
-            Ok: value => ({ message: value }),
-            Err: error => {
+        return result.match(
+            value => ({ message: value }),
+            error => {
                 throw new HttpException(
                     error.message,
                     error.statusCode || HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 
     @Delete("file")
     async deleteFile(@Body() body: DeleteCloudStorageFileInput) {
         const result = await this.cloudStorageService.deleteFile(body.path)
-        return result.cata({
-            Ok: value => ({ message: value }),
-            Err: error => {
+        return result.match(
+            value => ({ message: value }),
+            error => {
                 throw new HttpException(
                     error.message,
                     error.statusCode || HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 
     @Get("is-dir-empty")
     async isDirEmpty(@Query() query: GetCloudStorageFileInput) {
         const result = await this.cloudStorageService.isDirEmpty(query.path)
-        return result.cata({
-            Ok: value => ({ isEmpty: value }),
-            Err: error => {
+        return result.match(
+            value => ({ isEmpty: value }),
+            error => {
                 throw new HttpException(
                     error.message,
                     error.statusCode || HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 }

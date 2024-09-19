@@ -2,7 +2,7 @@ import { NotFoundError } from "src/error/not-found.error"
 import { ActionAService } from "./action-a.service"
 import { ActionAError } from "./error/action-a.error"
 import { CreateActionADto } from "./dto/create-action-a.dto"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { ActionAAsyncError } from "./error"
 
 describe("ActionAService", () => {
@@ -57,7 +57,7 @@ describe("ActionAService", () => {
             }
 
             jest.spyOn(service, "simulateAsyncOperation").mockResolvedValue(
-                Ok(undefined)
+                ok(undefined)
             )
 
             const result: Result<string, ActionAAsyncError> =
@@ -79,7 +79,7 @@ describe("ActionAService", () => {
             }
 
             jest.spyOn(service, "simulateAsyncOperation").mockResolvedValue(
-                Err(new ActionAError("Simulated async failure"))
+                err(new ActionAError("Simulated async failure"))
             )
 
             const result: Result<string, ActionAAsyncError> =
@@ -100,7 +100,7 @@ describe("ActionAService", () => {
             }
 
             jest.spyOn(service, "simulateAsyncOperation").mockResolvedValue(
-                Err(new NotFoundError("Simulated async not found"))
+                err(new NotFoundError("Simulated async not found"))
             )
 
             const result = await service.executeAsyncActionA(dto)

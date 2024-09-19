@@ -4,7 +4,7 @@
 
 ## Error Handling with `Result` Type
 
-We use the **`Result` type** (monad) from the [Pratica library](https://github.com/rametta/pratica) in our codebase to represent operations that can either succeed or fail. This allows for more explicit and structured handling of success and error cases, improving the overall readability and maintainability of our code.
+We use the **`Result` type** (monad) from the [neverthrow library](https://github.com/supermacro/neverthrow) in our codebase to represent operations that can either succeed or fail. This allows for more explicit and structured handling of success and error cases, improving the overall readability and maintainability of our code.
 
 -   **Success (`Ok`)**: Contains the value when the operation is successful.
 -   **Error (`Err`)**: Contains an error object when the operation fails.
@@ -17,17 +17,17 @@ We use the **`Result` type** (monad) from the [Pratica library](https://github.c
 
 ### Example Usage:
 
-You can handle success and error cases using the `cata` method, which allows you to map both the `Ok` (success) and `Err` (error) cases to appropriate actions.
+You can handle success and error cases using the `match` method, which allows you to map both the `Ok` (success) and `Err` (error) cases to appropriate actions.
 
 ```typescript
 const result = this.actionAService.executeActionA(dto)
 
-return result.cata({
-    Ok: successMessage => successMessage,
-    Err: error => {
+return result.match(
+    successMessage => successMessage,
+    error => {
         // Handle the error based on its type
     }
-})
+)
 ```
 
 ## Error Handling with Custom `type` Field
@@ -56,9 +56,9 @@ When an error occurs, you can switch on the `type` field to differentiate betwee
 ```typescript
 const result = this.actionAService.executeActionA(dto)
 
-return result.cata({
-    Ok: successMessage => successMessage,
-    Err: error => {
+return result.match(
+    successMessage => successMessage,
+    error => {
         switch (error.type) {
             case "action-a":
                 this.logger.error(`Action A Error: ${error.message}`)
@@ -88,7 +88,7 @@ return result.cata({
                 )
         }
     }
-})
+)
 ```
 
 ### Key Points:

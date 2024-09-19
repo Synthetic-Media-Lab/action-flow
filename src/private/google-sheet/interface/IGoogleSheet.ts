@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { GoogleSheetError } from "../error"
 
 export interface IGoogleSheet extends IFetchData {}

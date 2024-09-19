@@ -1,5 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 import { DomainAvailabilityError } from "./error/domain-availability.error"
 import {
@@ -23,10 +23,10 @@ export class DomainAvailabilityService implements IDomainAvailability {
         this.logger.debug(`Checking domain availability for: ${domain}`)
 
         if (!domain) {
-            return Err(new DomainAvailabilityError("Domain is required"))
+            return err(new DomainAvailabilityError("Domain is required"))
         }
 
-        return Ok(
+        return ok(
             Math.random() > 0.5
                 ? {
                       domain,

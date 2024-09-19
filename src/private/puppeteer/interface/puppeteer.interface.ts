@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 
 export interface IPuppeteerService
     extends IPuppeteerCheckPageContent,

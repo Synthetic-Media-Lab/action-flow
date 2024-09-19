@@ -11,7 +11,7 @@ import {
     ValidationPipe
 } from "@nestjs/common"
 import { CoreMessage, GenerateTextResult } from "ai"
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { SystemMessage } from "./decorators/system-message.decorator"
 import { AiGenerateTextDto } from "./dto/create-ai-prompt.dto"
 import { GenAIError } from "./error/gen-ai.error"
@@ -59,8 +59,8 @@ export class OpenAIController {
             GenAIError
         > = await this.genAIService.generateText(updatedMessages)
 
-        return result.cata({
-            Ok: (response: GenerateTextResult<FunctionTools>) => {
+        return result.match(
+            (response: GenerateTextResult<FunctionTools>) => {
                 this.logger.debug(
                     `Result: ${JSON.stringify(response.responseMessages, null, 2)}`
                 )
@@ -69,12 +69,12 @@ export class OpenAIController {
                     ? response.responseMessages
                     : { message: "No text generated." }
             },
-            Err: (error: GenAIError) => {
+            (error: GenAIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
 
                 throw new HttpException(error.message, 500)
             }
-        })
+        )
     }
 
     private addSystemMessage(

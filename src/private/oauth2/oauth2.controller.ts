@@ -34,12 +34,12 @@ export class OAuth2Controller {
             redirect_uri
         )
 
-        return tokenResult.cata({
-            Ok: accessToken => ({ accessToken }),
-            Err: error => {
+        return tokenResult.match(
+            accessToken => ({ accessToken }),
+            error => {
                 throw error // Handle errors based on your preferred strategy
             }
-        })
+        )
     }
 
     // Optional endpoint to refresh token
@@ -48,9 +48,9 @@ export class OAuth2Controller {
     //   const { refresh_token } = refreshTokenDto;
     //   const tokenResult = await this.oauth2Service.refreshAccessToken(refresh_token);
 
-    //   return tokenResult.cata({
-    //     Ok: (accessToken) => ({ accessToken }),
-    //     Err: (error) => {
+    //   return tokenResult.match(
+    //     (accessToken) => ({ accessToken }),
+    //     (error) => {
     //       throw error; // Handle errors based on your preferred strategy
     //     },
     //   });

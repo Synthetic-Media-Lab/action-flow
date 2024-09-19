@@ -38,31 +38,23 @@ Before using the CI/CD pipeline, follow these steps:
 
 -   Ensure you have a **Google Cloud Project**.
 -   Enable **Google Cloud Run** and **Google Artifact Registry**.
--   Create a **Service Account** with the following roles:
+-   Create a **Service Account** with the appropriate roles, such as:
     -   Cloud Run Admin
     -   Artifact Registry Writer
     -   Logs Writer
     -   Storage Admin
     -   Secret Manager Secret Accessor
-    -   Service Account User. (To ensure the Service Account has the `iam.serviceAccounts.actAs` permission, so Github Actions interact with GCP.)
+    -   Service Account User (To ensure the Service Account has the required permissions to interact with Google Cloud via GitHub Actions.)
 
-### 2. Add Secrets in GitHub
+### 2. Add Secrets and Environment Variables
 
-In the repository settings, go to **Settings** → **Secrets and Variables** → **Actions** → **Secrets**, and add the following:
+In the repository settings, go to **Settings** → **Secrets and Variables** → **Actions**, and add the required **secrets** and **environment variables**. For specifics, refer to the `.env.example` file in the project, which outlines the variables needed for different services or modules you are using.
 
--   **`GCP_SERVICE_ACCOUNT_KEY`**: The JSON key for the Google Cloud service account.
--   **`GCP_SERVICE_ACCOUNT_EMAIL`**: The email address of the service account.
+Typical secrets include service account credentials and API keys for external services, while environment variables can cover project IDs, regions, and configuration options for your services.
 
-### 3. Add GitHub Environment Variables
+### 3. Trigger the Workflow
 
-In the same **Settings** → **Secrets and Variables** → **Actions** → **Variables**, add the following **environment variables**:
-
--   **`GCP_PROJECT_ID`**: Your Google Cloud project ID (e.g., `action-flow-kh`).
--   **`GCP_REGION`**: Your Google Cloud region for deployment (e.g., `europe-north1`).
-
-### 4. Trigger the Workflow
-
-Once these variables and secrets are set up, the pipeline will automatically trigger on every push to the `main` branch. You can manually trigger it by pushing a new commit or re-running a previous workflow from the GitHub Actions tab.
+Once secrets and environment variables are set up, the pipeline will automatically trigger on every push to the `main` branch. You can manually trigger it by pushing a new commit or re-running a previous workflow from the GitHub Actions tab.
 
 ## Workflow Breakdown
 
@@ -73,7 +65,7 @@ Once these variables and secrets are set up, the pipeline will automatically tri
 ## Troubleshooting
 
 1. **Permission Issues**: Ensure the service account has the correct roles and permissions, especially `iam.serviceAccounts.actAs` and `Cloud Run Admin`.
-2. **Secrets**: Double-check that the secrets are correctly defined in GitHub.
+2. **Secrets**: Double-check that the secrets and environment variables are correctly defined in GitHub and match the `.env.example` file.
 3. **Deployment Errors**: You can check the deployment logs in the **Google Cloud Console** under Cloud Run to troubleshoot deployment failures.
 
 ## Summary

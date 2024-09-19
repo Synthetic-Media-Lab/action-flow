@@ -11,7 +11,7 @@ import {
 import { AI_SERVICE_TOKEN } from "./ai.provider"
 import { CreateAICustomPromptDto } from "./dto/create-ai-prompt.dto"
 import { AIGenericResponse, IAI } from "./interface/IAI"
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { AIError } from "./error/ai.error"
 
 @Controller("ai")
@@ -44,16 +44,16 @@ export class AIController {
 
         this.logger.debug(`Result: ${JSON.stringify(result, null, 2)}`)
 
-        return result.cata({
-            Ok: (response: AIGenericResponse<unknown, unknown>) => {
+        return result.match(
+            (response: AIGenericResponse<unknown, unknown>) => {
                 return response.generatedText || "No text generated."
             },
-            Err: (error: AIError) => {
+            (error: AIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
 
                 throw new HttpException(error.message, 500)
             }
-        })
+        )
     }
 
     @Post("generate-text-with-tools")
@@ -77,15 +77,15 @@ export class AIController {
 
         this.logger.debug(`Result: ${JSON.stringify(result, null, 2)}`)
 
-        return result.cata({
-            Ok: (response: AIGenericResponse<unknown, unknown>) => {
+        return result.match(
+            (response: AIGenericResponse<unknown, unknown>) => {
                 return response.generatedText || "No text generated."
             },
-            Err: (error: AIError) => {
+            (error: AIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
 
                 throw new HttpException(error.message, 500)
             }
-        })
+        )
     }
 }

@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { TrademarkError } from "../error/trademark.error"
 import { CheckTrademarkDto } from "../dto/trademark.dto"
 import { OAuthToken } from "src/private/oauth2/interface/oauth2.interface"

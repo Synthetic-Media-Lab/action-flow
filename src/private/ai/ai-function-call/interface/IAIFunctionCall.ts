@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { AIError } from "src/private/ai/error/ai.error"
 
 export interface IAIFunctionCall<TArgs> {

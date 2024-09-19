@@ -29,9 +29,9 @@ export class ActionAController {
     async execute(@Body() createActionADto: CreateActionADto): Promise<string> {
         const result = this.actionAService.executeActionA(createActionADto)
 
-        return result.cata({
-            Ok: successMessage => successMessage,
-            Err: error => {
+        return result.match(
+            successMessage => successMessage,
+            error => {
                 this.logger.error(`Error executing action: ${error.message}`)
 
                 throw new HttpException(
@@ -42,7 +42,7 @@ export class ActionAController {
                     HttpStatus.BAD_REQUEST
                 )
             }
-        })
+        )
     }
 
     @Post("async")
@@ -53,9 +53,9 @@ export class ActionAController {
         const result =
             await this.actionAService.executeAsyncActionA(createActionADto)
 
-        return result.cata({
-            Ok: data => data,
-            Err: error => {
+        return result.match(
+            data => data,
+            error => {
                 switch (error.type) {
                     case "action-a":
                         this.logger.error(`Action A Error: ${error.message}`)
@@ -91,6 +91,6 @@ export class ActionAController {
                         )
                 }
             }
-        })
+        )
     }
 }

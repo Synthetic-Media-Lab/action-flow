@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing"
-import { Err, Ok } from "pratica"
+import { err, ok } from "neverthrow"
 import { InvalidInputError } from "../../error/invalid-input.error"
 import { NotFoundError } from "../../error/not-found.error"
 import { CLOUD_STORAGE_PROVIDER } from "./cloud-storage.providers"
@@ -52,42 +52,35 @@ describe("CloudStorageService", () => {
                 data: "file content"
             })
 
-            mockProvider.getFile.mockResolvedValue(Ok(mockFile))
+            mockProvider.getFile.mockResolvedValue(ok(mockFile))
 
             const result = await service.getFile(path)
 
             expect(mockProvider.getFile).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: value => {
-                    expect(value).toEqual(mockFile)
-                },
-                Err: error => {
+            result.match(
+                value => expect(value).toEqual(mockFile),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return NotFoundError when file does not exist", async () => {
             const path = "non-existent-file.txt"
             const error = new NotFoundError(`File not found at path: ${path}`)
 
-            mockProvider.getFile.mockResolvedValue(Err(error))
+            mockProvider.getFile.mockResolvedValue(err(error))
 
             const result = await service.getFile(path)
 
             expect(mockProvider.getFile).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: () => {
-                    fail("Expected Err, but got Ok")
-                },
-                Err: err => {
-                    expect(err).toEqual(error)
-                }
-            })
+            result.match(
+                () => fail("Expected Err, but got Ok"),
+                err => expect(err).toEqual(error)
+            )
         })
     })
 
@@ -107,42 +100,35 @@ describe("CloudStorageService", () => {
                 })
             ]
 
-            mockProvider.getFiles.mockResolvedValue(Ok(mockFiles))
+            mockProvider.getFiles.mockResolvedValue(ok(mockFiles))
 
             const result = await service.getFiles(path)
 
             expect(mockProvider.getFiles).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: files => {
-                    expect(files).toEqual(mockFiles)
-                },
-                Err: error => {
+            result.match(
+                files => expect(files).toEqual(mockFiles),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return NotFoundError when no files are found", async () => {
             const path = "empty-directory/"
             const error = new NotFoundError(`No files found at path: ${path}`)
 
-            mockProvider.getFiles.mockResolvedValue(Err(error))
+            mockProvider.getFiles.mockResolvedValue(err(error))
 
             const result = await service.getFiles(path)
 
             expect(mockProvider.getFiles).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: () => {
-                    fail("Expected Err, but got Ok")
-                },
-                Err: err => {
-                    expect(err).toEqual(error)
-                }
-            })
+            result.match(
+                () => fail("Expected Err, but got Ok"),
+                err => expect(err).toEqual(error)
+            )
         })
     })
 
@@ -152,7 +138,7 @@ describe("CloudStorageService", () => {
             const destination = "path/to/destination.txt"
             const successMessage = `File uploaded to ${destination}`
 
-            mockProvider.upsertFile.mockResolvedValue(Ok(successMessage))
+            mockProvider.upsertFile.mockResolvedValue(ok(successMessage))
 
             const result = await service.upsertFile(fileContent, destination)
 
@@ -161,16 +147,13 @@ describe("CloudStorageService", () => {
                 destination
             )
 
-            result.cata({
-                Ok: message => {
-                    expect(message).toEqual(successMessage)
-                },
-                Err: error => {
+            result.match(
+                message => expect(message).toEqual(successMessage),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return InvalidInputError when upload fails", async () => {
@@ -178,7 +161,7 @@ describe("CloudStorageService", () => {
             const destination = "path/to/destination.txt"
             const error = new InvalidInputError("Upload failed")
 
-            mockProvider.upsertFile.mockResolvedValue(Err(error))
+            mockProvider.upsertFile.mockResolvedValue(err(error))
 
             const result = await service.upsertFile(fileContent, destination)
 
@@ -187,14 +170,10 @@ describe("CloudStorageService", () => {
                 destination
             )
 
-            result.cata({
-                Ok: () => {
-                    fail("Expected Err, but got Ok")
-                },
-                Err: err => {
-                    expect(err).toEqual(error)
-                }
-            })
+            result.match(
+                () => fail("Expected Err, but got Ok"),
+                err => expect(err).toEqual(error)
+            )
         })
     })
 
@@ -203,42 +182,35 @@ describe("CloudStorageService", () => {
             const path = "path/to/file.txt"
             const successMessage = `File deleted at ${path}`
 
-            mockProvider.deleteFile.mockResolvedValue(Ok(successMessage))
+            mockProvider.deleteFile.mockResolvedValue(ok(successMessage))
 
             const result = await service.deleteFile(path)
 
             expect(mockProvider.deleteFile).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: message => {
-                    expect(message).toEqual(successMessage)
-                },
-                Err: error => {
+            result.match(
+                message => expect(message).toEqual(successMessage),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return NotFoundError when file does not exist", async () => {
             const path = "path/to/non-existent-file.txt"
             const error = new NotFoundError(`File not found at path: ${path}`)
 
-            mockProvider.deleteFile.mockResolvedValue(Err(error))
+            mockProvider.deleteFile.mockResolvedValue(err(error))
 
             const result = await service.deleteFile(path)
 
             expect(mockProvider.deleteFile).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: () => {
-                    fail("Expected Err, but got Ok")
-                },
-                Err: err => {
-                    expect(err).toEqual(error)
-                }
-            })
+            result.match(
+                () => fail("Expected Err, but got Ok"),
+                err => expect(err).toEqual(error)
+            )
         })
     })
 
@@ -246,63 +218,53 @@ describe("CloudStorageService", () => {
         it("should return true when directory is empty", async () => {
             const path = "empty-directory/"
 
-            mockProvider.isDirEmpty.mockResolvedValue(Ok(true))
+            mockProvider.isDirEmpty.mockResolvedValue(ok(true))
 
             const result = await service.isDirEmpty(path)
 
             expect(mockProvider.isDirEmpty).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: isEmpty => {
-                    expect(isEmpty).toBe(true)
-                },
-                Err: error => {
+            result.match(
+                isEmpty => expect(isEmpty).toBe(true),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return false when directory is not empty", async () => {
             const path = "non-empty-directory/"
 
-            mockProvider.isDirEmpty.mockResolvedValue(Ok(false))
+            mockProvider.isDirEmpty.mockResolvedValue(ok(false))
 
             const result = await service.isDirEmpty(path)
 
             expect(mockProvider.isDirEmpty).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: isEmpty => {
-                    expect(isEmpty).toBe(false)
-                },
-                Err: error => {
+            result.match(
+                isEmpty => expect(isEmpty).toBe(false),
+                error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`
                     )
-                }
-            })
+            )
         })
 
         it("should return InvalidInputError when check fails", async () => {
             const path = "some-directory/"
             const error = new InvalidInputError("Error checking directory")
 
-            mockProvider.isDirEmpty.mockResolvedValue(Err(error))
+            mockProvider.isDirEmpty.mockResolvedValue(err(error))
 
             const result = await service.isDirEmpty(path)
 
             expect(mockProvider.isDirEmpty).toHaveBeenCalledWith(path)
 
-            result.cata({
-                Ok: () => {
-                    fail("Expected Err, but got Ok")
-                },
-                Err: err => {
-                    expect(err).toEqual(error)
-                }
-            })
+            result.match(
+                () => fail("Expected Err, but got Ok"),
+                err => expect(err).toEqual(error)
+            )
         })
     })
 })

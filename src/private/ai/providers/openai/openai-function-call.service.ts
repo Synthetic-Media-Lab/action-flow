@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common"
 import OpenAI from "openai"
-import { Err, Just, Maybe, Nothing, Ok, Result } from "pratica"
+import { Just, Maybe, Nothing } from "pratica"
+import { Result, err, ok } from "neverthrow"
 import { functionHandlers } from "../../ai-function-call/function-handlers"
 import { AIError } from "../../error/ai.error"
 import { AIGenericResponse, ToolCall } from "../../interface/IAI"
@@ -32,7 +33,7 @@ export class OpenAIFunctionCallService {
                 this.logger.error(
                     `No handler found for function: ${toolCall.function.name}`
                 )
-                return Err(
+                return err(
                     new AIError(
                         `No handler found for ${toolCall.function.name}`
                     )
@@ -47,12 +48,12 @@ export class OpenAIFunctionCallService {
                 toolCall.function.arguments
             )
 
-            return handlerResult.cata({
-                Ok: (result: string) => {
+            return handlerResult.match(
+                (result: string) => {
                     this.logger.debug(
                         `Function call successful with result: ${result}`
                     )
-                    return Ok({
+                    return ok({
                         rawResponse: {
                             choices: [{ message: { content: result } }]
                         } as OpenAI.Chat.Completions.ChatCompletion,
@@ -60,14 +61,14 @@ export class OpenAIFunctionCallService {
                         toolCall: toolCall
                     })
                 },
-                Err: (error: AIError) => {
+                (error: AIError) => {
                     this.logger.error(`Function call failed: ${error.message}`)
-                    return Err(new AIError("Function call execution failed"))
+                    return err(new AIError("Function call execution failed"))
                 }
-            })
+            )
         } catch (error) {
             this.logger.error(`Error handling function call: ${error.message}`)
-            return Err(new AIError("Failed to handle function call"))
+            return err(new AIError("Failed to handle function call"))
         }
     }
 

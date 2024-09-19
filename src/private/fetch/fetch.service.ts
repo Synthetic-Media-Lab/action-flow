@@ -1,5 +1,5 @@
-import { Injectable, Inject, Logger } from "@nestjs/common"
-import { Ok, Err, Result } from "pratica"
+import { Inject, Injectable, Logger } from "@nestjs/common"
+import { Result, err, ok } from "neverthrow"
 import { FetchError } from "../../error/fetch.error"
 import { FETCH_TOKEN } from "./fetch.providers"
 import { IFetchService } from "./interface/fetch.interface"
@@ -29,7 +29,7 @@ export class FetchService implements IFetchService {
             )
 
             if (!response.ok) {
-                return Err(
+                return err(
                     new FetchError(
                         response.statusText || "Unknown error",
                         response.status
@@ -39,9 +39,9 @@ export class FetchService implements IFetchService {
 
             const jsonResponse = await response.json()
 
-            return Ok(jsonResponse)
+            return ok(jsonResponse)
         } catch (error) {
-            return Err(
+            return err(
                 new FetchError((error as Error).message || "Fetch failed")
             )
         }
@@ -60,7 +60,7 @@ export class FetchService implements IFetchService {
                 !response.ok ||
                 !response.headers.get("content-type")?.includes("text/html")
             ) {
-                return Err(
+                return err(
                     new FetchError(
                         response.statusText || textBody || "Unknown error",
                         response.status
@@ -68,9 +68,9 @@ export class FetchService implements IFetchService {
                 )
             }
 
-            return Ok(textBody)
+            return ok(textBody)
         } catch (error) {
-            return Err(
+            return err(
                 new FetchError((error as Error).message || "Fetch failed")
             )
         }

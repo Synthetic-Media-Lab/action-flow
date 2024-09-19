@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
-import { Result, Ok, Err } from "pratica"
+import { Result, ok, err } from "neverthrow"
 import { FetchService } from "../../fetch/fetch.service"
 import { OAuthToken } from "../interface/oauth2.interface"
 
@@ -38,15 +38,15 @@ export class AuthorizationCodeStrategy {
             }
         })
 
-        return fetchResult.cata({
-            Ok: data => Ok(data),
-            Err: error =>
-                Err(
+        return fetchResult.match(
+            data => ok(data),
+            error =>
+                err(
                     new Error(
                         `Failed to retrieve access token: ${error.message}`
                     )
                 )
-        })
+        )
     }
 
     // Make the refresh method generic
@@ -74,14 +74,14 @@ export class AuthorizationCodeStrategy {
             }
         })
 
-        return fetchResult.cata({
-            Ok: data => Ok(data),
-            Err: error =>
-                Err(
+        return fetchResult.match(
+            data => ok(data),
+            error =>
+                err(
                     new Error(
                         `Failed to refresh access token: ${error.message}`
                     )
                 )
-        })
+        )
     }
 }

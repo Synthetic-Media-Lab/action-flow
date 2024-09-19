@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 import { FetchService } from "src/private/fetch/fetch.service"
 import { OAuth2Service } from "src/private/oauth2/oauth2.service"
 import { CheckTrademarkDto } from "./dto/trademark.dto"
@@ -40,7 +40,7 @@ export class TrademarkService implements ITrademark {
         )
 
         if (!name) {
-            return Err(new TrademarkError("EUIPO Trademark name is required"))
+            return err(new TrademarkError("EUIPO Trademark name is required"))
         }
 
         const defaultStatusesToExclude = statusesToExclude.length
@@ -57,8 +57,8 @@ export class TrademarkService implements ITrademark {
 
         const tokenResult = await this.oauth2Service.getAccessToken()
 
-        return tokenResult.cata({
-            Ok: async accessToken => {
+        return tokenResult.match(
+            async accessToken => {
                 this.logger.debug(
                     `Received access token: ${JSON.stringify(accessToken)}`
                 )
@@ -104,9 +104,9 @@ export class TrademarkService implements ITrademark {
                         retries: 5,
                         delay: 1000,
                         retryOnResult: result =>
-                            result.cata({
-                                Ok: () => false,
-                                Err: error => {
+                            result.match(
+                                () => false,
+                                error => {
                                     if (error instanceof FetchError) {
                                         const statusCode = error.statusCode
                                         return (
@@ -117,23 +117,22 @@ export class TrademarkService implements ITrademark {
                                     }
                                     return false
                                 }
-                            })
+                            )
                     }
                 )
 
-                return fetchResult.cata({
-                    Ok: data => Ok(data),
-                    Err: () =>
-                        Err(
+                return fetchResult.match(
+                    data => ok(data),
+                    () =>
+                        err(
                             new TrademarkError(
                                 "Failed to fetch trademark information"
                             )
                         )
-                })
+                )
             },
-            Err: () =>
-                Err(new TrademarkError("Failed to retrieve access token"))
-        })
+            () => err(new TrademarkError("Failed to retrieve access token"))
+        )
     }
 
     private buildEuipoQuery =

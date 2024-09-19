@@ -6,7 +6,7 @@ import {
     GenerateTextResult,
     LanguageModel
 } from "ai"
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { GenAIError } from "../error/gen-ai.error"
 import { CallSettings } from "../types/types"
 

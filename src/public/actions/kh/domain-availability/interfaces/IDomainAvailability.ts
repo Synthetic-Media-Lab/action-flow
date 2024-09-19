@@ -1,4 +1,4 @@
-import { Result } from "pratica"
+import { Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "../dto/domain-availability.dto"
 import { DomainAvailabilityError } from "../error/domain-availability.error"
 

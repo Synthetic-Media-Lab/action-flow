@@ -4,7 +4,7 @@ import { ActionAAsyncError } from "./error"
 import { ActionAError } from "./error/action-a.error"
 import { IActionA } from "./interfaces/IActionA"
 import { NotFoundError } from "src/error/not-found.error"
-import { Err, Ok, Result } from "pratica"
+import { err, ok, Result } from "neverthrow"
 
 @Injectable()
 export class ActionAService implements IActionA {
@@ -19,10 +19,10 @@ export class ActionAService implements IActionA {
         this.logger.log(`Executing action for task ID: ${actionId}`)
 
         if (!actionId) {
-            return Err(new ActionAError("Invalid action ID")) // Use Pratica's Err
+            return err(new ActionAError("Invalid action ID")) // Use neverthrow's "err"
         }
 
-        return Ok(
+        return ok(
             `Action A executed with action ID: ${actionId} ${description ? `Optional description: "${description}"` : ""}`
         )
     }
@@ -48,10 +48,10 @@ export class ActionAService implements IActionA {
                 () =>
                     resolve(
                         Math.random() > 0.5
-                            ? Ok(undefined)
+                            ? ok(undefined)
                             : Math.random() > 0.5
-                              ? Err(new ActionAError("Simulated async failure"))
-                              : Err(
+                              ? err(new ActionAError("Simulated async failure"))
+                              : err(
                                     new NotFoundError(
                                         "Simulated async not found"
                                     )

@@ -49,9 +49,9 @@ export class GoogleSheetController {
             columnEnd
         )
 
-        return result.cata({
-            Ok: data => data,
-            Err: error => {
+        return result.match(
+            data => data,
+            error => {
                 this.logger.error(
                     `Error fetching data from Google Sheet: ${error.message}`
                 )
@@ -63,6 +63,6 @@ export class GoogleSheetController {
                     HttpStatus.INTERNAL_SERVER_ERROR
                 )
             }
-        })
+        )
     }
 }
