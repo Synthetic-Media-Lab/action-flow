@@ -98,6 +98,76 @@ return result.match(
 -   **Extensible**: If new error types are added, you can easily extend the `switch` statement to handle them.
 -   **Logging**: Always log the error before throwing an appropriate HTTP exception.
 
+## Ensuring Proper Error Handling with `eslint-plugin-neverthrow`
+
+We use the [eslint-plugin-neverthrow](https://github.com/mdbetancourt/eslint-plugin-neverthrow) to enforce that all `Result` objects are explicitly handled. This plugin ensures that errors are not silently ignored by requiring the use of `.match()`, `.unwrapOr()`, or `._unsafeUnwrap()`.
+
+### Installation
+
+Install the plugin with:
+
+```bash
+pnpm install eslint-plugin-neverthrow --save-dev
+```
+
+### Configuration
+
+In your `.eslintrc.js`, add the plugin and configure the `must-use-result` rule:
+
+```javascript
+module.exports = {
+    plugins: ["neverthrow"],
+    rules: {
+        "neverthrow/must-use-result": "error",
+        overrides: [
+            {
+                files: ["*.spec.ts"],
+                rules: {
+                    "neverthrow/must-use-result": "off" // Disable rule for test files
+                }
+            }
+        ]
+    }
+}
+```
+
+This configuration enforces handling of all `Result` objects in production code, while allowing you to disable the rule in specific files such as test files.
+
+---
+
+## Optional Value Handling with `Maybe` Type
+
+In some cases, you may need to handle optional values where a result may or may not be present.
+
+For these cases, we use the **`Maybe` type** from the [Pratica library](https://github.com/pratica-js/pratica). This type is useful when a value may either be present (`Just`) or absent (`Nothing`).
+
+> For example, imagine using a "head" function that gets the first value out of an array. What if the array is empty? Then what should be returned?
+>
+> In this case it is good to return the result as a Maybe<"something">, representing that either you have something, or you are in an invalid state that can never ever occur, and should handle it accordingly.
+
+### Example Usage of `Maybe`:
+
+The `pratica` library uses the `.cata` method to handle both cases of a Maybe, much like `neverthrow` uses the `.match` method to handle both cases of a Result.
+
+```typescript
+const toolCall = this.aiFunctionCallService.parseToolCall(completion)
+
+return toolCall.cata({
+    Just: toolCall => {
+        this.logger.debug(`Tool call detected: \${toolCall.function.name}`)
+        // Handle the tool call
+        return toolCall
+    },
+    Nothing: () => {
+        this.logger.debug("No tool call detected")
+        // Handle the absence of the value
+        return ok(undefined)
+    }
+})
+```
+
+If you need to handle optional values like this, you can integrate the **Pratica** library in your codebase for `Maybe` types.
+
 ---
 
 [← Back to Main Documentation](../README.md)
