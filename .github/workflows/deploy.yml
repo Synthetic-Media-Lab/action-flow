@@ -13,6 +13,8 @@ jobs:
         env:
             GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
             GCP_REGION: ${{ vars.GCP_REGION }}
+            GCS_BUCKET_NAME: ${{ vars.GCS_BUCKET_NAME }}
+            GCS_BASE_DOWNLOAD_URL: ${{ vars.GCS_BASE_DOWNLOAD_URL }}
 
         steps:
             - name: Checkout repository
@@ -42,10 +44,16 @@ jobs:
             - name: Run tests
               env:
                   GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+                  GCS_BUCKET_NAME: ${{ env.GCS_BUCKET_NAME }}
+                  GCS_BASE_DOWNLOAD_URL: ${{ env.GCS_BASE_DOWNLOAD_URL }}
               run: |
                   pnpm test
 
             - name: Run E2E tests
+              env:
+                  GCP_SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+                  GCS_BUCKET_NAME: ${{ env.GCS_BUCKET_NAME }}
+                  GCS_BASE_DOWNLOAD_URL: ${{ env.GCS_BASE_DOWNLOAD_URL }}
               run: |
                   pnpm test:e2e
 

@@ -62,3 +62,7 @@ pnpm run test:cov
 ## AI
 
 -   [Working with AI](documentation/README.ai.md)
+
+## Cloud Storage
+
+-   [Uploading files to a cloud provider](documentation/README.cloud-storage.md)
