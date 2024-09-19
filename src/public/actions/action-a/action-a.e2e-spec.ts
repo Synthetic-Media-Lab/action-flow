@@ -6,6 +6,7 @@ import { CreateActionADto } from "./dto/create-action-a.dto"
 import { ACTION_A_SERVICE_TOKEN } from "./action-a.providers"
 import { ActionAService } from "./action-a.service"
 import { NotFoundError } from "src/error/not-found.error"
+import { err, ok } from "neverthrow"
 
 describe("ActionAController (e2e)", () => {
     let app: INestApplication

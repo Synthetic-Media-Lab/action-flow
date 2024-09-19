@@ -38,7 +38,7 @@ module.exports = {
     },
     overrides: [
         {
-            files: ["*.spec.ts"],
+            files: ["*.spec.ts", "*.e2e-spec.ts"],
             rules: {
                 "neverthrow/must-use-result": "off"
             }
