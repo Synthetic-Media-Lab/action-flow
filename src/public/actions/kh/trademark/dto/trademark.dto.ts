@@ -19,6 +19,13 @@ export class CheckTrademarkDto {
 
     @IsArray()
     @IsOptional()
+    @Transform(({ value }) =>
+        value
+            ? Array.isArray(value)
+                ? value.map(Number)
+                : [Number(value)]
+            : []
+    )
     niceClasses?: number[] = []
 
     @IsEnum(EuipoTrademarkSearchStrategy)
@@ -31,7 +38,11 @@ export class CheckTrademarkDto {
     @IsOptional()
     @IsEnum(EuipoTrademarkStatus, { each: true })
     @Transform(({ value }) =>
-        value?.map((status: string) => status.toUpperCase())
+        value
+            ? Array.isArray(value)
+                ? value.map((status: string) => status.toUpperCase())
+                : [value.toUpperCase()]
+            : []
     )
     statusesToExclude?: EuipoTrademarkStatus[] = []
 

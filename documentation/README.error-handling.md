@@ -9,11 +9,21 @@ We use the **`Result` type** (monad) from the [neverthrow library](https://githu
 -   **Success (`Ok`)**: Contains the value when the operation is successful.
 -   **Error (`Err`)**: Contains an error object when the operation fails.
 
+> This design pattern exists in many languages:
+>
+> -   **Rust**: `Result`
+> -   **Haskell**: `Either`
+> -   **Scala**: `Try`
+> -   **Elm**: `Result`
+> -   **F#**: `Result`
+> -   **Swift**: `Result`
+
 ### Why Use `Result`?
 
-1. **Explicit error handling**: You can easily differentiate between success and failure cases.
-2. **Functional style**: You handle both outcomes (`Ok` and `Err`) in a single, unified block.
-3. **Improved type safety**: It forces you to explicitly handle errors, reducing the risk of unhandled exceptions.
+1. **Clear error handling**: You’re forced to handle both success (`Ok`) and error (`Err`), reducing the chance of missed errors.
+2. **Functional and clean**: Use `.match()` to handle both cases in one block, making code easier to follow.
+3. **Type-safe**: `Result` ensures errors are handled explicitly, preventing runtime issues. With eslint-plugin-neverthrow, unhandled `Result` objects are caught by linting, ensuring consistency.
+4. **Enforced consistency**: The ESLint plugin guarantees everyone follows the same pattern, improving code quality across the team.
 
 ### Example Usage:
 
@@ -132,8 +142,6 @@ module.exports = {
 ```
 
 This configuration enforces handling of all `Result` objects in production code, while allowing you to disable the rule in specific files such as test files.
-
----
 
 ## Optional Value Handling with `Maybe` Type
 

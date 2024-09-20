@@ -1,13 +1,13 @@
 import { Module } from "@nestjs/common"
-import { AiAnalysisController } from "./ai-analysis.controller"
-import { aiAnalysisServiceProvider } from "./ai-analysis.providers"
+import { aiAnalysisServiceProvider } from "./ai-brand-analysis.providers"
 import { ConfigModule } from "@nestjs/config"
 import { GenAIModule } from "src/private/gen-ai/gen-ai.module"
+import { AiBrandAnalysisController } from "./ai-brand-analysis.controller"
 
 @Module({
     imports: [ConfigModule, GenAIModule],
-    controllers: [AiAnalysisController],
+    controllers: [AiBrandAnalysisController],
     providers: [aiAnalysisServiceProvider],
     exports: [aiAnalysisServiceProvider]
 })
-export class AiAnalysisModule {}
+export class AiBrandAnalysisModule {}

@@ -43,17 +43,12 @@ export class TrademarkService implements ITrademark {
             return err(new TrademarkError("EUIPO Trademark name is required"))
         }
 
+        const validNiceClasses =
+            niceClasses && niceClasses.length > 0 ? niceClasses : []
+
         const defaultStatusesToExclude = statusesToExclude.length
             ? statusesToExclude
-            : [
-                  EuipoTrademarkStatus.REGISTERED,
-                  EuipoTrademarkStatus.UNDER_EXAMINATION,
-                  EuipoTrademarkStatus.APPLICATION_PUBLISHED,
-                  EuipoTrademarkStatus.REGISTRATION_PENDING,
-                  EuipoTrademarkStatus.OPPOSITION_PENDING,
-                  EuipoTrademarkStatus.APPEALED,
-                  EuipoTrademarkStatus.START_OF_OPPOSITION_PERIOD
-              ]
+            : [EuipoTrademarkStatus.EXPIRED]
 
         const tokenResult = await this.oauth2Service.getAccessToken()
 
@@ -72,16 +67,18 @@ export class TrademarkService implements ITrademark {
 
                 const query = this.buildEuipoQuery(
                     brandSearchQuery,
-                    niceClasses,
-                    defaultStatusesToExclude.length
-                        ? defaultStatusesToExclude
-                        : []
+                    validNiceClasses,
+                    defaultStatusesToExclude
                 )((name, niceClasses, statusesToExclude) => {
                     const statusStrings = statusesToExclude.length
                         ? `and status=out=(${statusesToExclude.join(",")})`
                         : ""
 
-                    return `${name} and niceClasses=all=(${niceClasses.join(",")}) ${statusStrings}`
+                    const niceClassesString = niceClasses.length
+                        ? `and niceClasses=all=(${niceClasses.join(",")})`
+                        : ""
+
+                    return `${name} ${niceClassesString} ${statusStrings}`
                 })
 
                 const fetchResult = await this.retryService.retry(

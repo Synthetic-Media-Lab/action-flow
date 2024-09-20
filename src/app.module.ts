@@ -6,17 +6,19 @@ import { AppService } from "./app.service"
 import { FetchModule } from "./private/fetch/fetch.module"
 import { GenAIModule } from "./private/gen-ai/gen-ai.module"
 import { OAuth2Module } from "./private/oauth2/oauth2.module"
-import { AiAnalysisModule } from "./public/actions/kh/ai-analysis/ai-analysis.module"
+import { AiBrandAnalysisModule } from "./public/actions/kh/ai-brand-analysis/ai-brand-analysis.module"
 import { DomainAvailabilityModule } from "./public/actions/kh/domain-availability/domain-availability.module"
 import { TrademarkModule } from "./public/actions/kh/trademark/trademark.module"
 import { RetryModule } from "./private/retry/retry.module"
 import { CloudStorageModule } from "./private/cloud-storage/cloud-storage.module"
+import { EventEmitterModule } from "@nestjs/event-emitter"
 
 @Module({
     imports: [
         ConfigModule.forRoot({
             isGlobal: true
         }),
+        EventEmitterModule.forRoot(),
         RetryModule,
         FetchModule,
         OAuth2Module,
@@ -24,7 +26,7 @@ import { CloudStorageModule } from "./private/cloud-storage/cloud-storage.module
         DomainAvailabilityModule,
         TrademarkModule,
         CloudStorageModule,
-        AiAnalysisModule
+        AiBrandAnalysisModule
     ],
     controllers: [AppController],
     providers: [AppService, ...appConfig],
