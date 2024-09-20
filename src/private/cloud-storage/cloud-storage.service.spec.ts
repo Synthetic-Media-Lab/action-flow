@@ -7,6 +7,7 @@ import { CloudStorageService } from "./google-cloud-storage.service"
 import { ICloudStorage } from "./interface/ICloudStorage"
 import { mockFileMetadata } from "./mock/google-storage"
 import { CloudDataFile, CloudMetadataFile } from "./types/cloud-fIle-types"
+import { EventEmitterModule } from "@nestjs/event-emitter"
 
 describe("CloudStorageService", () => {
     let service: CloudStorageService
@@ -22,6 +23,7 @@ describe("CloudStorageService", () => {
         }
 
         const module: TestingModule = await Test.createTestingModule({
+            imports: [EventEmitterModule.forRoot()],
             providers: [
                 CloudStorageService,
                 {

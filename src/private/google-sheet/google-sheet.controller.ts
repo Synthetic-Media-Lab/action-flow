@@ -1,16 +1,19 @@
 import {
+    Body,
     Controller,
     Get,
     HttpException,
     HttpStatus,
     Inject,
     Logger,
+    Post,
     Query,
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
 import { GOOGLE_SHEET_SERVICE_TOKEN } from "./google-sheet.providers"
 import { IGoogleSheet } from "./interface/IGoogleSheet"
+import { UpdateCellDto } from "./dto/update-cell.input"
 
 /* Please note: since this is a private module, this controller is only used during development. */
 
@@ -54,6 +57,47 @@ export class GoogleSheetController {
             error => {
                 this.logger.error(
                     `Error fetching data from Google Sheet: ${error.message}`
+                )
+                throw new HttpException(
+                    {
+                        status: HttpStatus.INTERNAL_SERVER_ERROR,
+                        error: error.message
+                    },
+                    HttpStatus.INTERNAL_SERVER_ERROR
+                )
+            }
+        )
+    }
+
+    @Post("update")
+    @UsePipes(new ValidationPipe())
+    async updateCell(@Body() updateCellDto: UpdateCellDto): Promise<string> {
+        const { sheetId, sheetName, row, column, value } = updateCellDto
+        this.logger.log(
+            `Updating cell in Google Sheet with the following parameters: 
+        sheetId: ${sheetId}, 
+        sheetName: ${sheetName}, 
+        row: ${row}, 
+        column: ${column}, 
+        value: ${value}`
+        )
+
+        const result = await this.googleSheetService.updateCell(
+            sheetId,
+            sheetName,
+            row,
+            column,
+            value
+        )
+
+        return result.match(
+            () => {
+                this.logger.log("Cell updated successfully")
+                return "Cell updated successfully"
+            },
+            error => {
+                this.logger.error(
+                    `Error updating cell in Google Sheet: ${error.message}`
                 )
                 throw new HttpException(
                     {
