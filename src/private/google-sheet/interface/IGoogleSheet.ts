@@ -1,7 +1,7 @@
 import { Result } from "neverthrow"
 import { GoogleSheetError } from "../error"
 
-export interface IGoogleSheet extends IFetchData {}
+export interface IGoogleSheet extends IFetchData, IUpdateCell {}
 
 interface IFetchData {
     fetchData(
@@ -11,4 +11,14 @@ interface IFetchData {
         columnStart?: string,
         columnEnd?: string
     ): Promise<Result<string[][], GoogleSheetError>>
+}
+
+export interface IUpdateCell {
+    updateCell(
+        sheetId: string,
+        sheetName: string,
+        row: number,
+        column: string,
+        value: string
+    ): Promise<Result<void, GoogleSheetError>>
 }

@@ -5,6 +5,7 @@ import { GoogleSheetError } from "./error"
 import { NotFoundError } from "src/error/not-found.error"
 import { google } from "googleapis"
 import { ConfigService } from "@nestjs/config"
+import { OnEvent } from "@nestjs/event-emitter"
 
 @Injectable()
 export class GoogleSheetService implements IGoogleSheet {
@@ -86,5 +87,66 @@ export class GoogleSheetService implements IGoogleSheet {
 
             return err(new Error("Failed to fetch data from Google Sheets"))
         }
+    }
+
+    public async updateCell(
+        sheetId: string,
+        sheetName: string,
+        row: number,
+        column: string,
+        value: string
+    ): Promise<Result<void, GoogleSheetError>> {
+        try {
+            const sheets = await this.getGoogleSheetClient()
+            const range = `${sheetName}!${column}${row}`
+
+            this.logger.log(
+                `Updating cell at range: ${range} with value: ${value}`
+            )
+
+            await sheets.spreadsheets.values.update({
+                spreadsheetId: sheetId,
+                range: range,
+                valueInputOption: "RAW",
+                requestBody: {
+                    values: [[value]]
+                }
+            })
+
+            return ok(undefined)
+        } catch (error) {
+            this.logger.error("Error updating cell in Google Sheets:", error)
+
+            return err(new Error("Failed to update cell"))
+        }
+    }
+
+    @OnEvent("file.upload.completed")
+    async handleGoogleSheetUpdate(event: {
+        sheetId: string
+        sheetName: string
+        row: number
+        column: string
+        value: string
+    }) {
+        this.logger.log(
+            `Updating Google Sheet: ${event.sheetId}, Row: ${event.row}, Column: ${event.column}`
+        )
+
+        const updateResult = await this.updateCell(
+            event.sheetId,
+            event.sheetName,
+            event.row,
+            event.column,
+            event.value
+        )
+
+        updateResult.match(
+            () => this.logger.log("Google Sheet updated successfully"),
+            error =>
+                this.logger.error(
+                    `Failed to update Google Sheet: ${error.message}`
+                )
+        )
     }
 }
