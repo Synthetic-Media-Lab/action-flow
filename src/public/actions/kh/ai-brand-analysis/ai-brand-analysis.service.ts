@@ -45,7 +45,7 @@ export class AiBrandAnalysisService implements IAiAnalysisService {
                     "file.upload",
                     new FileUploadEvent(
                         result.text,
-                        `brand-reports/${brand}.txt`
+                        `brand-reports/${brand.toLowerCase()}.txt`
                     )
                 )
 

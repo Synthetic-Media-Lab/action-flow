@@ -15,7 +15,7 @@ import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
 import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
 import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
 
-@Controller("ai-analysis")
+@Controller("ai-brand-analysis")
 @UseInterceptors(LoggingInterceptor)
 export class AiBrandAnalysisController {
     private readonly logger = new Logger(AiBrandAnalysisController.name)
