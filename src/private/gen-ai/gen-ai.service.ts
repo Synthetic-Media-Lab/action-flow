@@ -12,6 +12,7 @@ import { err, ok, Result } from "neverthrow"
 import { GenAIError } from "./error/gen-ai.error"
 import { IGenAI } from "./interface/gen-ai.interface"
 import { CallSettings, OpenAIChatModelId } from "./types/types"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 
 @Injectable()
 export class GenAIService<TOOLS extends Record<string, CoreTool>>
@@ -27,18 +28,19 @@ export class GenAIService<TOOLS extends Record<string, CoreTool>>
         private readonly tools: Record<string, CoreTool>
     ) {
         const apiKey = this.configService.get<LanguageModelV1>("OPENAI_API_KEY")
-        this.model = this.configService.get<OpenAIChatModelId>("OPENAI_MODEL")
+        const model = this.configService.get<OpenAIChatModelId>("OPENAI_MODEL")
 
         if (!apiKey) {
             this.logger.error("OpenAI API key is missing in the configuration")
             throw new Error("OpenAI API key is missing")
         }
 
-        if (!this.model) {
+        if (!model) {
             this.logger.error("OpenAI model is missing in the configuration")
             throw new Error("OpenAI model is missing")
         }
 
+        this.model = model
         this.openai = openai(this.model)
     }
 
@@ -81,7 +83,9 @@ export class GenAIService<TOOLS extends Record<string, CoreTool>>
 
             return ok(result)
         } catch (error) {
-            this.logger.error(`Failed to generate text: ${error.message}`)
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Failed to generate text: ${message}`)
 
             return err(
                 new GenAIError("Failed to generate text using Vercel AI")

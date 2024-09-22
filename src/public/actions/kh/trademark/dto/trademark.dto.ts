@@ -1,21 +1,24 @@
+import { Transform, Type } from "class-transformer"
 import {
     IsArray,
     IsEnum,
     IsInt,
+    IsObject,
     IsOptional,
     IsString,
     Max,
-    Min
+    Min,
+    ValidateNested
 } from "class-validator"
+import { IEuipoTrademarksResult } from "../interface/IEuipoTrademarksResult"
 import {
     EuipoTrademarkSearchStrategy,
     EuipoTrademarkStatus
 } from "../interface/ITrademark"
-import { Transform, Type } from "class-transformer"
 
 export class CheckTrademarkDto {
     @IsString()
-    name: string
+    name: string = ""
 
     @IsArray()
     @IsOptional()
@@ -58,4 +61,23 @@ export class CheckTrademarkDto {
     @Min(0)
     @Type(() => Number)
     page?: number = 0
+}
+
+export class UploadEuipoResultDto<T = unknown> {
+    @IsObject()
+    @ValidateNested()
+    @Type(() => EuipoTrademarksResultDto)
+    euipoTrademarksResult: IEuipoTrademarksResult<T> = { trademarks: [] }
+
+    @IsString()
+    googleSheetBrandSelection: string = ""
+}
+
+class EuipoTrademarksResultDto<T = unknown>
+    implements IEuipoTrademarksResult<T>
+{
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => Object)
+    trademarks: T[] = []
 }

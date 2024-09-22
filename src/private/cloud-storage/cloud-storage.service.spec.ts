@@ -8,6 +8,7 @@ import { ICloudStorage } from "./interface/ICloudStorage"
 import { mockFileMetadata } from "./mock/google-storage"
 import { CloudDataFile, CloudMetadataFile } from "./types/cloud-fIle-types"
 import { EventEmitterModule } from "@nestjs/event-emitter"
+import { ZodError } from "zod"
 
 describe("CloudStorageService", () => {
     let service: CloudStorageService
@@ -54,6 +55,10 @@ describe("CloudStorageService", () => {
                 data: "file content"
             })
 
+            if (mockFile instanceof ZodError) {
+                throw new Error("Mock file creation failed during test setup")
+            }
+
             mockProvider.getFile.mockResolvedValue(ok(mockFile))
 
             const result = await service.getFile(path)
@@ -89,18 +94,22 @@ describe("CloudStorageService", () => {
     describe("getFiles", () => {
         it("should return a list of files when files exist", async () => {
             const path = "some-directory/"
-            const mockFiles = [
-                CloudMetadataFile.create({
-                    ...mockFileMetadata,
-                    name: "file1.txt",
-                    path: `${path}file1.txt`
-                }),
-                CloudMetadataFile.create({
-                    ...mockFileMetadata,
-                    name: "file2.txt",
-                    path: `${path}file2.txt`
-                })
-            ]
+
+            const mockFile1 = CloudMetadataFile.create({
+                ...mockFileMetadata,
+                name: "file1.txt",
+                path: `${path}file1.txt`
+            })
+
+            const mockFile2 = CloudMetadataFile.create({
+                ...mockFileMetadata,
+                name: "file2.txt",
+                path: `${path}file2.txt`
+            })
+
+            const mockFiles = [mockFile1, mockFile2].filter(
+                (file): file is CloudMetadataFile => !(file instanceof ZodError)
+            )
 
             mockProvider.getFiles.mockResolvedValue(ok(mockFiles))
 
@@ -138,9 +147,25 @@ describe("CloudStorageService", () => {
         it("should return success message when file is uploaded", async () => {
             const fileContent = "file content"
             const destination = "path/to/destination.txt"
-            const successMessage = `File uploaded to ${destination}`
 
-            mockProvider.upsertFile.mockResolvedValue(ok(successMessage))
+            const cloudMetadataFile = CloudMetadataFile.create({
+                id: "1234",
+                name: "destination.txt",
+                contentType: "text/plain",
+                size: "123",
+                mediaLink: "https://media-link",
+                publicLink: "https://public-link",
+                path: destination,
+                createdDate: "2021-09-01T00:00:00.000Z"
+            })
+
+            if (cloudMetadataFile instanceof ZodError) {
+                throw new Error(
+                    "Mock CloudMetadataFile creation failed during test setup"
+                )
+            }
+
+            mockProvider.upsertFile.mockResolvedValue(ok(cloudMetadataFile))
 
             const result = await service.upsertFile(fileContent, destination)
 
@@ -150,7 +175,7 @@ describe("CloudStorageService", () => {
             )
 
             result.match(
-                message => expect(message).toEqual(successMessage),
+                file => expect(file).toEqual(cloudMetadataFile),
                 error =>
                     fail(
                         `Expected Ok, but got Err with error: ${error.message}`

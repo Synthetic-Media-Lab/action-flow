@@ -1,11 +1,12 @@
 import { Injectable, Logger } from "@nestjs/common"
-import { Result, ok, err } from "neverthrow"
-import { IGoogleSheet } from "./interface/IGoogleSheet"
-import { GoogleSheetError } from "./error"
-import { NotFoundError } from "src/error/not-found.error"
-import { google } from "googleapis"
 import { ConfigService } from "@nestjs/config"
-import { OnEvent } from "@nestjs/event-emitter"
+import { google } from "googleapis"
+import { Result, err, ok } from "neverthrow"
+import { NotFoundError } from "src/error/not-found.error"
+import { CloudStorageError } from "../cloud-storage/error"
+import { GoogleSheetAPIError } from "../cloud-storage/error/cloud-storage-error"
+import { GoogleSheetError } from "./error"
+import { IGoogleSheet } from "./interface/IGoogleSheet"
 
 @Injectable()
 export class GoogleSheetService implements IGoogleSheet {
@@ -24,13 +25,19 @@ export class GoogleSheetService implements IGoogleSheet {
         return google.sheets({ version: "v4", auth })
     }
 
-    public async fetchData(
-        sheetId: string,
-        sheetName: string,
-        row?: number,
-        columnStart?: string,
+    public async fetchData({
+        sheetId,
+        sheetName,
+        row = 1,
+        columnStart = "A",
+        columnEnd = "Z"
+    }: {
+        sheetId: string
+        sheetName: string
+        row?: number
+        columnStart?: string
         columnEnd?: string
-    ): Promise<Result<string[][], GoogleSheetError>> {
+    }): Promise<Result<string[][], GoogleSheetError>> {
         try {
             const gcpServiceAccountKey = this.configService.get(
                 "GCP_SERVICE_ACCOUNT_KEY"
@@ -79,23 +86,25 @@ export class GoogleSheetService implements IGoogleSheet {
 
             return ok([...data])
         } catch (error) {
-            this.logger.error("Error fetching data from Google Sheets:", error)
+            const googleSheetError = this.handleGoogleSheetsError(error)
 
-            if (error.code === 404) {
-                return err(new NotFoundError("Google Sheet not found"))
-            }
-
-            return err(new Error("Failed to fetch data from Google Sheets"))
+            return err(googleSheetError)
         }
     }
 
-    public async updateCell(
-        sheetId: string,
-        sheetName: string,
-        row: number,
-        column: string,
+    public async updateCell({
+        sheetId,
+        sheetName,
+        row,
+        column,
+        value
+    }: {
+        sheetId: string
+        sheetName: string
+        row: number
+        column: string
         value: string
-    ): Promise<Result<void, GoogleSheetError>> {
+    }): Promise<Result<void, GoogleSheetError>> {
         try {
             const sheets = await this.getGoogleSheetClient()
             const range = `${sheetName}!${column}${row}`
@@ -121,32 +130,24 @@ export class GoogleSheetService implements IGoogleSheet {
         }
     }
 
-    @OnEvent("file.upload.completed")
-    async handleGoogleSheetUpdate(event: {
-        sheetId: string
-        sheetName: string
-        row: number
-        column: string
-        value: string
-    }) {
-        this.logger.log(
-            `Updating Google Sheet: ${event.sheetId}, Row: ${event.row}, Column: ${event.column}`
-        )
+    private handleGoogleSheetsError(error: unknown): CloudStorageError {
+        if (typeof error === "object" && error !== null && "code" in error) {
+            const { code, message } = error as { code: number; message: string }
 
-        const updateResult = await this.updateCell(
-            event.sheetId,
-            event.sheetName,
-            event.row,
-            event.column,
-            event.value
-        )
+            this.logger.error(`Google Sheets API error: ${message}`)
 
-        updateResult.match(
-            () => this.logger.log("Google Sheet updated successfully"),
-            error =>
-                this.logger.error(
-                    `Failed to update Google Sheet: ${error.message}`
-                )
+            if (code === 404) {
+                return new NotFoundError("Google Sheet not found")
+            }
+
+            return new GoogleSheetAPIError(message, code)
+        }
+
+        this.logger.error("Unknown error occurred in Google Sheets API", error)
+
+        return new GoogleSheetAPIError(
+            "Unknown error occurred in Google Sheets",
+            500
         )
     }
 }

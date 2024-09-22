@@ -1,18 +1,26 @@
-import { Injectable, Logger } from "@nestjs/common"
+import { Inject, Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { err, ok, Result } from "neverthrow"
+import { FetchError } from "src/error/fetch.error"
+import { CLOUD_STORAGE_PROVIDER } from "src/private/cloud-storage/cloud-storage.providers"
+import { ICloudStorage } from "src/private/cloud-storage/interface/ICloudStorage"
+import { CloudMetadataFile } from "src/private/cloud-storage/types/cloud-fIle-types"
 import { FetchService } from "src/private/fetch/fetch.service"
 import { OAuth2Service } from "src/private/oauth2/oauth2.service"
+import { RetryService } from "src/private/retry/retry.service"
 import { CheckTrademarkDto } from "./dto/trademark.dto"
 import { TrademarkError } from "./error/trademark.error"
 import {
-    ITrademark,
+    IEuipoTrademark,
+    IEuipoTrademarksResult
+} from "./interface/IEuipoTrademarksResult"
+import {
+    EuipoTrademarkSearchStrategy,
     EuipoTrademarkStatus,
-    EuipoTrademarkResult,
-    EuipoTrademarkSearchStrategy
+    ITrademark
 } from "./interface/ITrademark"
-import { RetryService } from "src/private/retry/retry.service"
-import { FetchError } from "src/error/fetch.error"
+import { GoogleSheetBrandSelection } from "./types/types"
+import { CloudStorageError } from "src/private/cloud-storage/error"
 
 @Injectable()
 export class TrademarkService implements ITrademark {
@@ -22,7 +30,9 @@ export class TrademarkService implements ITrademark {
         private readonly configService: ConfigService,
         private readonly oauth2Service: OAuth2Service,
         private readonly fetchService: FetchService,
-        private readonly retryService: RetryService
+        private readonly retryService: RetryService,
+        @Inject(CLOUD_STORAGE_PROVIDER)
+        private readonly cloudStorageService: ICloudStorage
     ) {}
 
     public async checkEuipo({
@@ -33,7 +43,7 @@ export class TrademarkService implements ITrademark {
         size = 10,
         page = 0
     }: CheckTrademarkDto): Promise<
-        Result<EuipoTrademarkResult, TrademarkError>
+        Result<IEuipoTrademarksResult<IEuipoTrademark>, TrademarkError>
     > {
         this.logger.debug(
             `Checking EUIPO trademark. Configuration: ${JSON.stringify({ name, niceClasses, searchStrategy, statusesToExclude, size, page })}`
@@ -83,7 +93,9 @@ export class TrademarkService implements ITrademark {
 
                 const fetchResult = await this.retryService.retry(
                     () =>
-                        this.fetchService.json<EuipoTrademarkResult>(
+                        this.fetchService.json<
+                            IEuipoTrademarksResult<IEuipoTrademark>
+                        >(
                             `${euipoUrl}?query=${encodeURIComponent(query)}&size=${size}&page=${page}`,
                             {
                                 method: "GET",
@@ -93,7 +105,7 @@ export class TrademarkService implements ITrademark {
                                     "X-IBM-Client-Id":
                                         this.configService.get<string>(
                                             "OAUTH_CLIENT_ID"
-                                        )
+                                        ) || ""
                                 }
                             }
                         ),
@@ -106,12 +118,16 @@ export class TrademarkService implements ITrademark {
                                 error => {
                                     if (error instanceof FetchError) {
                                         const statusCode = error.statusCode
+
+                                        if (!statusCode) return false
+
                                         return (
                                             statusCode === 401 ||
                                             (statusCode >= 500 &&
                                                 statusCode < 600)
                                         )
                                     }
+
                                     return false
                                 }
                             )
@@ -129,6 +145,25 @@ export class TrademarkService implements ITrademark {
                 )
             },
             () => err(new TrademarkError("Failed to retrieve access token"))
+        )
+    }
+
+    public async uploadEuipoResultToCloudStorage(
+        result: IEuipoTrademarksResult<IEuipoTrademark>,
+        googleSheetBrandSelection: GoogleSheetBrandSelection
+    ): Promise<Result<CloudMetadataFile, CloudStorageError>> {
+        this.logger.log(
+            `Uploading EUIPO result to cloud storage for brand: ${googleSheetBrandSelection}`
+        )
+
+        const uploadResult = await this.cloudStorageService.upsertFile(
+            JSON.stringify(result, null, 2),
+            `brand-reports/${googleSheetBrandSelection.toLowerCase()}.txt`
+        )
+
+        return uploadResult.match(
+            data => ok(data),
+            error => err(error)
         )
     }
 

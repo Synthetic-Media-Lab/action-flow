@@ -2,7 +2,7 @@ import { IsString, IsOptional } from "class-validator"
 
 export class CreateActionADto {
     @IsString()
-    actionId: string
+    actionId: string = ""
 
     @IsString()
     @IsOptional()

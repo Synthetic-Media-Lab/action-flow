@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config"
 import { AICustomOptions, AIGenericResponse, IAI } from "../../interface/IAI"
 import { OpenAIFunctionCallService } from "./openai-function-call.service"
 import { getWeatherSchema } from "../../ai-function-call/function-definitions/get-weather.schema"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 
 @Injectable()
 export class OpenAIService
@@ -20,18 +21,19 @@ export class OpenAIService
         private readonly aiFunctionCallService: OpenAIFunctionCallService
     ) {
         const apiKey = this.configService.get<string>("OPENAI_API_KEY")
-        this.model = this.configService.get<string>("OPENAI_MODEL")
+        const model = this.configService.get<string>("OPENAI_MODEL")
 
         if (!apiKey) {
             this.logger.error("OpenAI API key is missing in the configuration")
             throw new Error("OpenAI API key is missing")
         }
 
-        if (!this.model) {
+        if (!model) {
             this.logger.error("OpenAI model is missing in the configuration")
             throw new Error("OpenAI model is missing")
         }
 
+        this.model = model
         this.openai = new OpenAI({ apiKey })
     }
 
@@ -75,7 +77,10 @@ export class OpenAIService
                 generatedText: message
             })
         } catch (error) {
-            this.logger.error(`Failed to generate text: ${error.message}`)
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Failed to generate text: ${message}`)
+
             return err(new AIError("Failed to generate text using OpenAI"))
         }
     }
@@ -173,8 +178,10 @@ export class OpenAIService
                 }
             })
         } catch (error) {
+            const { message } = formatErrorForLogging(error)
+
             this.logger.error(
-                `[generateTextWithTools] Failed to generate text: ${error.message}`
+                `[generateTextWithTools] Failed to generate text: ${message}`
             )
             return err(new AIError("Failed to generate text using OpenAI"))
         }

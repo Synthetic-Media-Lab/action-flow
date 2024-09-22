@@ -2,11 +2,18 @@ import { Result } from "neverthrow"
 import { TrademarkError } from "../error/trademark.error"
 import { CheckTrademarkDto } from "../dto/trademark.dto"
 import { OAuthToken } from "src/private/oauth2/interface/oauth2.interface"
+import { CloudMetadataFile } from "src/private/cloud-storage/types/cloud-fIle-types"
+import {
+    IEuipoTrademark,
+    IEuipoTrademarksResult
+} from "./IEuipoTrademarksResult"
+import { CloudStorageError } from "src/private/cloud-storage/error"
 
 /* Note: WIPO does not have an API, and does not allow webcrawling. Leaving the method commented out for now. */
 
 export interface ITrademark
-    extends /* ICheckWipoTrademark, */ ICheckEuipoTrademark {}
+    extends /* ICheckWipoTrademark, */ ICheckEuipoTrademark,
+        IUploadEuipoResultToCloudStorage {}
 
 /* interface ICheckWipoTrademark {
     checkWipo(data: CheckTrademarkDto): Promise<Result<TrademarkResult, TrademarkError>>
@@ -15,7 +22,14 @@ export interface ITrademark
 interface ICheckEuipoTrademark {
     checkEuipo(
         data: CheckTrademarkDto
-    ): Promise<Result<EuipoTrademarkResult, TrademarkError>>
+    ): Promise<Result<IEuipoTrademarksResult<IEuipoTrademark>, TrademarkError>>
+}
+
+interface IUploadEuipoResultToCloudStorage {
+    uploadEuipoResultToCloudStorage(
+        euipoTrademarksResult: IEuipoTrademarksResult<IEuipoTrademark>,
+        googleSheetBrandSelection: string
+    ): Promise<Result<CloudMetadataFile, CloudStorageError>>
 }
 
 export enum EuipoTrademarkStatus {
@@ -42,15 +56,6 @@ export enum EuipoTrademarkStatus {
 export enum EuipoTrademarkSearchStrategy {
     EXACT = "EXACT",
     FUZZY = "FUZZY"
-}
-
-export interface EuipoTrademarkResult {
-    name: string
-    status: EuipoTrademarkStatus
-    details?: {
-        registrationNumber?: string
-        applicationDate?: string
-    }
 }
 
 export interface EuipoOAuthTokenResponse extends OAuthToken {

@@ -2,17 +2,17 @@ import { IsString, IsInt } from "class-validator"
 
 export class UpdateCellDto {
     @IsString()
-    sheetId: string
+    sheetId: string = ""
 
     @IsString()
-    sheetName: string
+    sheetName: string = ""
 
     @IsInt()
-    row: number
+    row: number = 0
 
     @IsString()
-    column: string
+    column: string = ""
 
     @IsString()
-    value: string
+    value: string = ""
 }

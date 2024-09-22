@@ -2,8 +2,8 @@ import { IsString } from "class-validator"
 
 export class AiBrandAnalysisDto {
     @IsString()
-    text: string
+    text: string = ""
 
     @IsString()
-    brand: string
+    brand: string = ""
 }

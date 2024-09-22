@@ -4,7 +4,6 @@ import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
 import { GEN_AI_SERVICE_TOKEN } from "src/private/gen-ai/gen-ai.provider"
 import { IGenAI } from "src/private/gen-ai/interface/gen-ai.interface"
 import { EventEmitter2 } from "@nestjs/event-emitter"
-import { FileUploadEvent } from "src/private/cloud-storage/events/cloud-storage-events"
 import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
 import { AiBrandAnalysisError } from "./error/ai-brand-analysis.error"
 
@@ -41,13 +40,13 @@ export class AiBrandAnalysisService implements IAiAnalysisService {
             result => {
                 const analysisResult = { text: result.text }
 
-                this.eventEmitter.emit(
+                /* this.eventEmitter.emit(
                     "file.upload",
-                    new FileUploadEvent(
-                        result.text,
-                        `brand-reports/${brand.toLowerCase()}.txt`
-                    )
-                )
+                    new FileUploadEvent({
+                        fileContent: result.text,
+                        destination: `brand-reports/${brand.toLowerCase()}.txt`
+                    })
+                ) */
 
                 return ok(analysisResult)
             },

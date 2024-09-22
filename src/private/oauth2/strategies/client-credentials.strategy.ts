@@ -24,6 +24,10 @@ export class ClientCredentialsStrategy {
         )
         const scope = this.configService.get<string>("OAUTH_SCOPE") || "uid"
 
+        if (!tokenUrl || !clientId || !clientSecret) {
+            return err(new UnauthorizedError("Missing OAuth configuration"))
+        }
+
         const body = new URLSearchParams({
             grant_type: "client_credentials",
             client_id: clientId,
@@ -35,7 +39,6 @@ export class ClientCredentialsStrategy {
             `Requesting access token with body: ${body} at ${tokenUrl}`
         )
 
-        // Fetch the token response, using the generic type T
         const fetchResult = await this.fetchService.json<T>(tokenUrl, {
             method: "POST",
             body,

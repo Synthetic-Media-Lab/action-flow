@@ -8,7 +8,7 @@ export const mockFileMetadata = {
     mediaLink: "mocked-mediaLink",
     bucket: "mocked-bucket",
     path: "mocked-bucket",
-    timeCreated: "2022-01-01T00:00:00Z"
+    createdDate: "2022-01-01T00:00:00Z" //
 }
 
 export const mockDirectoryMetadata = {
@@ -19,19 +19,19 @@ export const mockDirectoryMetadata = {
     mediaLink: "mocked-mediaLink",
     bucket: "mocked-bucket",
     path: "mocked-bucket/",
-    timeCreated: "2022-01-01T00:00:00Z"
+    createdDate: "2022-01-01T00:00:00Z"
 }
 
 export const mockFileMetadataBeforeDate = {
     ...mockFileMetadata,
     name: "test-folder/old-file.txt",
-    timeCreated: "2022-01-01T00:00:00Z"
+    createdDate: "2022-01-01T00:00:00Z"
 }
 
 export const mockFileMetadataAfterDate = {
     ...mockFileMetadata,
     name: "test-folder/new-file.txt",
-    timeCreated: "2023-01-01T00:00:00Z"
+    createdDate: "2023-01-01T00:00:00Z"
 }
 
 export const mockFileReadStream = () => {

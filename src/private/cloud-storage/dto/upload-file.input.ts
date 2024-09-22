@@ -2,36 +2,36 @@ import { IsString } from "class-validator"
 
 export class MetaData {
     @IsString()
-    key: string
+    key: string = ""
 
     @IsString()
-    value: string
+    value: string = ""
 }
 
 export class UpsertCloudStorageFileContentInput {
     @IsString()
-    fileContent: string
+    fileContent: string = ""
 }
 
 export class UpsertCloudStorageFileDestinationInput {
     @IsString()
-    destination: string
+    destination: string = ""
 }
 
 export class DeleteCloudStorageFileInput {
     @IsString()
-    path: string
+    path: string = ""
 }
 
 export class PurgeCloudStorageDirInput {
     @IsString()
-    path: string
+    path: string = ""
 }
 
 export class DeleteFilesBeforeInput {
     @IsString()
-    path: string
+    path: string = ""
 
     @IsString()
-    beforeDate: string
+    beforeDate: string = ""
 }

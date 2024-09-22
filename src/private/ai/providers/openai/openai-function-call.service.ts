@@ -5,6 +5,7 @@ import { Result, err, ok } from "neverthrow"
 import { functionHandlers } from "../../ai-function-call/function-handlers"
 import { AIError } from "../../error/ai.error"
 import { AIGenericResponse, ToolCall } from "../../interface/IAI"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 
 @Injectable()
 export class OpenAIFunctionCallService {
@@ -67,7 +68,10 @@ export class OpenAIFunctionCallService {
                 }
             )
         } catch (error) {
-            this.logger.error(`Error handling function call: ${error.message}`)
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Error handling function call: ${message}`)
+
             return err(new AIError("Failed to handle function call"))
         }
     }
@@ -99,7 +103,10 @@ export class OpenAIFunctionCallService {
                 return Nothing
             }
         } catch (error) {
-            this.logger.error(`Error parsing function call: ${error.message}`)
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Error parsing function call: ${message}`)
+
             return Nothing
         }
     }

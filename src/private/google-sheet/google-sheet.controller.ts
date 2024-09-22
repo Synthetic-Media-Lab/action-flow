@@ -44,13 +44,13 @@ export class GoogleSheetController {
             columnEnd: ${columnEnd}`
         )
 
-        const result = await this.googleSheetService.fetchData(
+        const result = await this.googleSheetService.fetchData({
             sheetId,
             sheetName,
             row,
             columnStart,
             columnEnd
-        )
+        })
 
         return result.match(
             data => data,
@@ -82,13 +82,13 @@ export class GoogleSheetController {
         value: ${value}`
         )
 
-        const result = await this.googleSheetService.updateCell(
+        const result = await this.googleSheetService.updateCell({
             sheetId,
             sheetName,
             row,
             column,
             value
-        )
+        })
 
         return result.match(
             () => {

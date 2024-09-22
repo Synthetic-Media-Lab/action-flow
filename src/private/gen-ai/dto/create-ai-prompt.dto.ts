@@ -14,7 +14,7 @@ export class AiGenerateTextDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CoreMessageDto)
-    messages: CoreMessage[]
+    messages: CoreMessage[] = []
 
     @IsOptional()
     temperature?: number
@@ -38,7 +38,7 @@ export class AiGenerateTextDto {
 
 export class CoreMessageDto {
     @IsIn(["system", "user", "assistant", "tool"])
-    role: "system" | "user" | "assistant" | "tool"
+    role: "system" | "user" | "assistant" | "tool" = "user"
 
     @ValidateIf(o => o.role !== "tool")
     @IsString()
@@ -46,5 +46,5 @@ export class CoreMessageDto {
     @IsObject()
     content:
         | string
-        | { tool_name: string; tool_output: Record<string, unknown> }
+        | { tool_name: string; tool_output: Record<string, unknown> } = ""
 }

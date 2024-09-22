@@ -11,7 +11,6 @@ export class AuthorizationCodeStrategy {
         private readonly configService: ConfigService
     ) {}
 
-    // Make the method generic
     async getAccessTokenWithAuthCode<T extends OAuthToken>(
         code: string,
         redirectUri: string
@@ -21,6 +20,10 @@ export class AuthorizationCodeStrategy {
         const clientSecret = this.configService.get<string>(
             "OAUTH_CLIENT_SECRET"
         )
+
+        if (!tokenUrl || !clientId || !clientSecret) {
+            return err(new Error("Missing OAuth configuration"))
+        }
 
         const body = new URLSearchParams({
             grant_type: "authorization_code",
@@ -58,6 +61,10 @@ export class AuthorizationCodeStrategy {
         const clientSecret = this.configService.get<string>(
             "OAUTH_CLIENT_SECRET"
         )
+
+        if (!tokenUrl || !clientId || !clientSecret) {
+            return err(new Error("Missing OAuth configuration"))
+        }
 
         const body = new URLSearchParams({
             grant_type: "refresh_token",

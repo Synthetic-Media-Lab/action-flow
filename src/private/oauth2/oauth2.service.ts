@@ -10,8 +10,8 @@ import { AppError } from "src/error"
 @Injectable()
 export class OAuth2Service implements IOAuth2Service {
     private readonly logger = new Logger(OAuth2Service.name)
-    private token: string
-    private tokenExpiry: Date
+    private token: string = ""
+    private tokenExpiry: Date = new Date(0)
 
     constructor(
         private readonly clientCredentialsStrategy: ClientCredentialsStrategy,

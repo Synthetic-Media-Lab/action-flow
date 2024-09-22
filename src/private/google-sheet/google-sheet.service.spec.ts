@@ -71,7 +71,7 @@ describe("GoogleSheetService", () => {
             })
 
             const result: Result<string[][], GoogleSheetError> =
-                await service.fetchData(sheetId, sheetName, 3)
+                await service.fetchData({ sheetId, sheetName, row: 3 })
 
             expect(result.isOk()).toBe(true)
 
@@ -89,7 +89,7 @@ describe("GoogleSheetService", () => {
             })
 
             const result: Result<string[][], GoogleSheetError> =
-                await service.fetchData(sheetId, sheetName, 3)
+                await service.fetchData({ sheetId, sheetName, row: 3 })
 
             expect(result.isErr()).toBe(true)
 
@@ -106,7 +106,7 @@ describe("GoogleSheetService", () => {
             const sheetName = "MockSheet"
 
             const result: Result<string[][], GoogleSheetError> =
-                await service.fetchData(sheetId, sheetName, 3)
+                await service.fetchData({ sheetId, sheetName, row: 3 })
 
             expect(result.isErr()).toBe(true)
 
@@ -127,7 +127,13 @@ describe("GoogleSheetService", () => {
             })
 
             const result: Result<string[][], GoogleSheetError> =
-                await service.fetchData(sheetId, sheetName, 5, "B", "D")
+                await service.fetchData({
+                    sheetId,
+                    sheetName,
+                    row: 5,
+                    columnStart: "B",
+                    columnEnd: "D"
+                })
 
             expect(result.isOk()).toBe(true)
 

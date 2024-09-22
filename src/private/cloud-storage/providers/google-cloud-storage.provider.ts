@@ -1,37 +1,52 @@
-import { Injectable, Logger } from "@nestjs/common"
-import { Result, ok, err } from "neverthrow"
-import { CloudDataFile, CloudMetadataFile } from "../types/cloud-fIle-types"
-import { CloudStorageError } from "../types/cloud-storage-error"
-import { ConfigService } from "@nestjs/config"
 import { Storage } from "@google-cloud/storage"
+import { Injectable, Logger } from "@nestjs/common"
+import { ConfigService } from "@nestjs/config"
+import { Result, err, ok } from "neverthrow"
 import { InvalidInputError } from "src/error/invalid-input.error"
 import { NotFoundError } from "src/error/not-found.error"
+import { ValidationError } from "src/error/validation.error"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
+import { ZodError } from "zod"
+import { CloudStorageError } from "../error"
 import { ICloudStorage } from "../interface/ICloudStorage"
+import { CloudDataFile, CloudMetadataFile } from "../types/cloud-fIle-types"
 
 @Injectable()
 export class GoogleCloudStorageProvider implements ICloudStorage {
     private readonly logger = new Logger(GoogleCloudStorageProvider.name)
     private storageClient: Storage
     private bucketName: string
+    private projectName: string
 
     constructor(private configService: ConfigService) {
-        this.bucketName = this.configService.get<string>("GCS_BUCKET_NAME")
-        const serviceAccountKey = JSON.parse(
-            this.configService.get<string>("GCP_SERVICE_ACCOUNT_KEY")
+        const projectName = this.configService.get<string>("GCP_PROJECT_ID")
+        const bucketName = this.configService.get<string>("GCS_BUCKET_NAME")
+        const serviceAccountKeyString = this.configService.get<string>(
+            "GCP_SERVICE_ACCOUNT_KEY"
         )
 
+        if (!projectName || !bucketName || !serviceAccountKeyString) {
+            this.logger.error("Missing required Google Cloud configuration")
+            throw new Error("Missing required Google Cloud configuration")
+        }
+
+        const serviceAccountKey = JSON.parse(serviceAccountKeyString)
+
+        this.projectName = projectName
+        this.bucketName = bucketName
         this.storageClient = new Storage({
             credentials: serviceAccountKey
         })
     }
 
-    async getFile(
+    public async getFile(
         path: string
     ): Promise<Result<CloudDataFile, CloudStorageError>> {
         try {
             const file = this.storageClient.bucket(this.bucketName).file(path)
 
             const [exists] = await file.exists()
+
             if (!exists) {
                 return err(new NotFoundError(`File not found at path: ${path}`))
             }
@@ -40,26 +55,35 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
             const [contents] = await file.download()
 
             const dataFile = CloudDataFile.create({
-                id: metadata.id,
-                name: metadata.name,
-                contentType: metadata.contentType,
-                size: metadata.size.toString(),
-                mediaLink: metadata.mediaLink,
-                publicLink: metadata.mediaLink,
-                path: metadata.name,
-                data: contents.toString()
+                id: metadata.id || "",
+                name: metadata.name || "",
+                contentType: metadata.contentType || "application/octet-stream",
+                size: metadata.size?.toString() || "0",
+                mediaLink: metadata.mediaLink || "",
+                publicLink: metadata.mediaLink || "",
+                path: metadata.name || "",
+                data: contents.toString() || ""
             })
+
+            if (dataFile instanceof ZodError) {
+                return err(
+                    new ValidationError(
+                        `Invalid file metadata at path: ${path}`
+                    )
+                )
+            }
 
             return ok(dataFile)
         } catch (error) {
-            this.logger.error(
-                `Error getting file at path ${path}: ${error.message}`
-            )
-            return err(new InvalidInputError(error.message))
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Error getting file at path ${path}: ${message}`)
+
+            return err(new InvalidInputError(message))
         }
     }
 
-    async getFiles(
+    public async getFiles(
         path: string
     ): Promise<Result<CloudMetadataFile[], CloudStorageError>> {
         try {
@@ -73,32 +97,48 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
                 return err(new NotFoundError(`No files found at path: ${path}`))
             }
 
-            const metadataFiles = files.map(file =>
-                CloudMetadataFile.create({
-                    id: file.metadata.id,
-                    name: file.name,
-                    contentType: file.metadata.contentType,
-                    size: file.metadata.size.toString(),
-                    mediaLink: file.metadata.mediaLink,
-                    publicLink: file.metadata.mediaLink,
-                    path: file.name,
-                    createdDate: file.metadata.timeCreated
-                })
-            )
+            const metadataFilesResult = files.reduce<
+                Result<CloudMetadataFile[], CloudStorageError>
+            >((acc, file) => {
+                if (acc.isErr()) return acc
 
-            return ok(metadataFiles)
+                const metadataFile = CloudMetadataFile.create({
+                    id: file.metadata.id || "",
+                    name: file.name || "",
+                    contentType:
+                        file.metadata.contentType || "application/octet-stream",
+                    size: file.metadata.size?.toString() || "0",
+                    mediaLink: file.metadata.mediaLink || "",
+                    publicLink: file.metadata.mediaLink || "",
+                    path: file.name || "",
+                    createdDate: file.metadata.timeCreated || ""
+                })
+
+                if (metadataFile instanceof ZodError) {
+                    return err(
+                        new ValidationError(
+                            `Invalid metadata for file: ${file.name}`
+                        )
+                    )
+                }
+
+                return ok([...acc.value, metadataFile])
+            }, ok([]))
+
+            return metadataFilesResult
         } catch (error) {
-            this.logger.error(
-                `Error getting files at path ${path}: ${error.message}`
-            )
-            return err(new InvalidInputError(error.message))
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Error getting files at path ${path}: ${message}`)
+
+            return err(new InvalidInputError(message))
         }
     }
 
-    async upsertFile(
+    public async upsertFile(
         fileContent: string,
         destination: string
-    ): Promise<Result<string, CloudStorageError>> {
+    ): Promise<Result<CloudMetadataFile, CloudStorageError>> {
         try {
             const file = this.storageClient
                 .bucket(this.bucketName)
@@ -106,16 +146,47 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             await file.save(fileContent)
 
-            return ok(`File uploaded to ${destination}`)
+            const [metadata] = await file.getMetadata()
+
+            const objectDetailsLink = this.getObjectDetailsLink({
+                filePath: destination,
+                bucketName: this.bucketName,
+                projectName: this.projectName
+            })
+
+            const metadataFile = CloudMetadataFile.create({
+                id: metadata.id || "",
+                name: metadata.name || "",
+                contentType: metadata.contentType || "application/octet-stream",
+                size: metadata.size?.toString() || "0",
+                mediaLink: objectDetailsLink || "",
+                path: metadata.name || "",
+                createdDate: metadata.timeCreated || ""
+            })
+
+            if (metadataFile instanceof ZodError) {
+                return err(
+                    new ValidationError(
+                        `Invalid file metadata at path: ${destination}`
+                    )
+                )
+            }
+
+            return ok(metadataFile)
         } catch (error) {
+            const { message } = formatErrorForLogging(error)
+
             this.logger.error(
-                `Error uploading file to ${destination}: ${error.message}`
+                `Error uploading file to ${destination}: ${message}`
             )
-            return err(new InvalidInputError(error.message))
+
+            return err(new InvalidInputError(message))
         }
     }
 
-    async deleteFile(path: string): Promise<Result<string, CloudStorageError>> {
+    public async deleteFile(
+        path: string
+    ): Promise<Result<string, CloudStorageError>> {
         try {
             const file = this.storageClient.bucket(this.bucketName).file(path)
 
@@ -128,14 +199,15 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             return ok(`File deleted at ${path}`)
         } catch (error) {
-            this.logger.error(
-                `Error deleting file at ${path}: ${error.message}`
-            )
-            return err(new InvalidInputError(error.message))
+            const { message } = formatErrorForLogging(error)
+
+            this.logger.error(`Error deleting file at ${path}: ${message}`)
+
+            return err(new InvalidInputError(message))
         }
     }
 
-    async isDirEmpty(
+    public async isDirEmpty(
         path: string
     ): Promise<Result<boolean, CloudStorageError>> {
         try {
@@ -148,10 +220,27 @@ export class GoogleCloudStorageProvider implements ICloudStorage {
 
             return ok(files.length === 0)
         } catch (error) {
+            const { message } = formatErrorForLogging(error)
+
             this.logger.error(
-                `Error checking if directory is empty at ${path}: ${error.message}`
+                `Error checking if directory is empty at ${path}: ${message}`
             )
-            return err(new InvalidInputError(error.message))
+
+            return err(new InvalidInputError(message))
         }
+    }
+
+    private getObjectDetailsLink({
+        filePath,
+        bucketName,
+        projectName
+    }: {
+        filePath: string
+        bucketName: string
+        projectName: string
+    }): string {
+        const encodedFilePath = encodeURIComponent(filePath)
+
+        return `https://console.cloud.google.com/storage/browser/_details/${bucketName}/${encodedFilePath}?orgonly=true&project=${projectName}`
     }
 }

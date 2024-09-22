@@ -1,5 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { IRetry, IRetryOptions } from "./interface/retry.interface"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 
 @Injectable()
 export class RetryService implements IRetry {
@@ -50,8 +51,10 @@ export class RetryService implements IRetry {
 
                 return result
             } catch (error) {
+                const { message } = formatErrorForLogging(error)
+
                 this.logger.debug(
-                    `Error encountered: ${error.message}. Retries left: ${retriesLeft}`
+                    `Error encountered: ${message}. Retries left: ${retriesLeft}`
                 )
 
                 const shouldRetry =
@@ -59,7 +62,7 @@ export class RetryService implements IRetry {
 
                 if (!shouldRetry || retriesLeft <= 0) {
                     this.logger.debug(
-                        `No retries left or error is not retryable. Throwing error: ${error.message}`
+                        `No retries left or error is not retryable. Throwing error: ${message}`
                     )
                     throw error
                 }

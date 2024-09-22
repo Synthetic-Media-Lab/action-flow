@@ -2,7 +2,7 @@ import { IsString, IsOptional, IsNumber } from "class-validator"
 
 export class CreateAICustomPromptDto {
     @IsString()
-    prompt: string
+    prompt: string = ""
 
     @IsOptional()
     @IsString()

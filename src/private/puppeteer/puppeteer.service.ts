@@ -6,6 +6,7 @@ import {
     IPuppeteerService,
     ITakeScreenshotOptions
 } from "./interface/puppeteer.interface"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 
 @Injectable()
 export class PuppeteerService implements IPuppeteerService {
@@ -52,10 +53,10 @@ export class PuppeteerService implements IPuppeteerService {
             await browser.close()
             return ok(`Page content: ${visibleContent}`)
         } catch (error) {
-            this.logger.error(
-                `Failed to access page: ${error.message}`,
-                error.stack
-            )
+            const { message, stack } = formatErrorForLogging(error)
+
+            this.logger.error(`Failed to access page: ${message}`, stack)
+
             return err(new Error("Failed to access page."))
         }
     }
@@ -97,10 +98,10 @@ export class PuppeteerService implements IPuppeteerService {
 
             return ok(screenshotPath)
         } catch (error) {
-            this.logger.error(
-                `Failed to take screenshot: ${error.message}`,
-                error.stack
-            )
+            const { message, stack } = formatErrorForLogging(error)
+
+            this.logger.error(`Failed to take screenshot: ${message}`, stack)
+
             return err(new Error("Failed to take screenshot"))
         }
     }

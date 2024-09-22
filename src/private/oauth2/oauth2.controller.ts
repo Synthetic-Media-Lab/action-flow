@@ -17,9 +17,15 @@ export class OAuth2Controller {
         const redirectUri = this.configService.get<string>("OAUTH_REDIRECT_URI")
         const scope =
             this.configService.get<string>("OAUTH_SCOPE") || "openid profile"
-        const authUrl = `${this.configService.get<string>(
+        const authUrlBase = this.configService.get<string>(
             "OAUTH_AUTHORIZE_URL"
-        )}?response_type=code&client_id=${encodeURIComponent(
+        )
+
+        if (!clientId || !redirectUri || !authUrlBase) {
+            throw new Error("Missing OAuth configuration")
+        }
+
+        const authUrl = `${authUrlBase}?response_type=code&client_id=${encodeURIComponent(
             clientId
         )}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scope)}`
 

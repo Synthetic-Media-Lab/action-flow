@@ -8,6 +8,6 @@ import { CloudStorageService } from "./google-cloud-storage.service"
     imports: [ConfigModule],
     controllers: [CloudStorageController],
     providers: [CloudStorageService, ...CloudStorageProviders],
-    exports: [CloudStorageService]
+    exports: [CloudStorageService, ...CloudStorageProviders]
 })
 export class CloudStorageModule {}

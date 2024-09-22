@@ -12,7 +12,7 @@ import { Type } from "class-transformer"
 
 export class CheckTrademarkDto {
     @IsString()
-    brand: string
+    brand: string = ""
 
     @IsOptional()
     @IsString()
