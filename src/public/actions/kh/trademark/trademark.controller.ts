@@ -21,6 +21,7 @@ import {
 import { ITrademark } from "./interface/ITrademark"
 import { TRADEMARK_SERVICE_TOKEN } from "./trademark.providers"
 import { CloudMetadataFile } from "src/private/cloud-storage/types/cloud-fIle-types"
+import { identity } from "rxjs"
 
 @Controller("trademark")
 @UseInterceptors(LoggingInterceptor)
@@ -47,22 +48,19 @@ export class TrademarkController {
 
         const result = await this.trademarkService.checkEuipo(checkTrademarkDto)
 
-        return result.match(
-            result => result,
-            error => {
-                this.logger.error(
-                    `Error checking EUIPO trademark: ${error.message}`
-                )
+        return result.match(identity, error => {
+            this.logger.error(
+                `Error checking EUIPO trademark: ${error.message}`
+            )
 
-                throw new HttpException(
-                    {
-                        status: HttpStatus.BAD_REQUEST,
-                        error: error.message
-                    },
-                    HttpStatus.BAD_REQUEST
-                )
-            }
-        )
+            throw new HttpException(
+                {
+                    status: HttpStatus.BAD_REQUEST,
+                    error: error.message
+                },
+                HttpStatus.BAD_REQUEST
+            )
+        })
     }
 
     @Post("upload")
@@ -79,21 +77,18 @@ export class TrademarkController {
                 googleSheetBrandSelection
             )
 
-        return result.match(
-            result => result,
-            error => {
-                this.logger.error(
-                    `Error uploading EUIPO trademark result: ${error.message}`
-                )
+        return result.match(identity, error => {
+            this.logger.error(
+                `Error uploading EUIPO trademark result: ${error.message}`
+            )
 
-                throw new HttpException(
-                    {
-                        status: HttpStatus.BAD_REQUEST,
-                        error: error.message
-                    },
-                    HttpStatus.BAD_REQUEST
-                )
-            }
-        )
+            throw new HttpException(
+                {
+                    status: HttpStatus.BAD_REQUEST,
+                    error: error.message
+                },
+                HttpStatus.BAD_REQUEST
+            )
+        })
     }
 }

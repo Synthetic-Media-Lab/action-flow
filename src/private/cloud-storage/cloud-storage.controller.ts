@@ -17,6 +17,7 @@ import {
 } from "./dto/upload-file.input"
 import { ICloudStorage } from "./interface/ICloudStorage"
 import { CLOUD_STORAGE_PROVIDER } from "./cloud-storage.providers"
+import { identity } from "rxjs"
 
 @Controller("cloud-storage")
 export class CloudStorageController {
@@ -29,29 +30,23 @@ export class CloudStorageController {
     async getFile(@Query() query: GetCloudStorageFileInput) {
         const result = await this.cloudStorageService.getFile(query.path)
 
-        return result.match(
-            value => value,
-            error => {
-                throw new HttpException(
-                    error.message,
-                    error.statusCode || HttpStatus.BAD_REQUEST
-                )
-            }
-        )
+        return result.match(identity, error => {
+            throw new HttpException(
+                error.message,
+                error.statusCode || HttpStatus.BAD_REQUEST
+            )
+        })
     }
 
     @Get("files")
     async getFiles(@Query() query: GetCloudStorageFileInput) {
         const result = await this.cloudStorageService.getFiles(query.path)
-        return result.match(
-            value => value,
-            error => {
-                throw new HttpException(
-                    error.message,
-                    error.statusCode || HttpStatus.BAD_REQUEST
-                )
-            }
-        )
+        return result.match(identity, error => {
+            throw new HttpException(
+                error.message,
+                error.statusCode || HttpStatus.BAD_REQUEST
+            )
+        })
     }
 
     @Post("file")

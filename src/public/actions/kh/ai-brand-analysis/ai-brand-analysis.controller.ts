@@ -14,6 +14,7 @@ import { AI_ANALYSIS_SERVICE_TOKEN } from "./ai-brand-analysis.providers"
 import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
 import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
 import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
+import { identity } from "rxjs"
 
 @Controller("ai-brand-analysis")
 @UseInterceptors(LoggingInterceptor)
@@ -36,19 +37,16 @@ export class AiBrandAnalysisController {
 
         const result = await this.aiAnalysisService.run(aiAnalysisDto)
 
-        return result.match(
-            res => res,
-            error => {
-                this.logger.error(`Error in AI analysis: ${error.message}`)
+        return result.match(identity, error => {
+            this.logger.error(`Error in AI analysis: ${error.message}`)
 
-                throw new HttpException(
-                    {
-                        status: HttpStatus.BAD_REQUEST,
-                        error: error.message
-                    },
-                    HttpStatus.BAD_REQUEST
-                )
-            }
-        )
+            throw new HttpException(
+                {
+                    status: HttpStatus.BAD_REQUEST,
+                    error: error.message
+                },
+                HttpStatus.BAD_REQUEST
+            )
+        })
     }
 }
