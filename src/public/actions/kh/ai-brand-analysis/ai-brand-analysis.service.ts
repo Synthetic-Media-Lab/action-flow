@@ -1,11 +1,12 @@
 import { Inject, Injectable, Logger } from "@nestjs/common"
 import { err, ok, Result } from "neverthrow"
-import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
 import { GEN_AI_SERVICE_TOKEN } from "src/private/gen-ai/gen-ai.provider"
 import { IGenAI } from "src/private/gen-ai/interface/gen-ai.interface"
-import { EventEmitter2 } from "@nestjs/event-emitter"
 import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
 import { AiBrandAnalysisError } from "./error/ai-brand-analysis.error"
+import { IAiAnalysisService } from "./interfaces/IAiAnalysis"
+import { brandAnalysisSchema } from "./schema/brand-analysis-schema"
+import { AiAnalysisResult } from "./types/types"
 
 @Injectable()
 export class AiBrandAnalysisService implements IAiAnalysisService {
@@ -13,8 +14,7 @@ export class AiBrandAnalysisService implements IAiAnalysisService {
 
     constructor(
         @Inject(GEN_AI_SERVICE_TOKEN)
-        private readonly ai: IGenAI<{}>,
-        private readonly eventEmitter: EventEmitter2
+        private readonly ai: IGenAI<{}>
     ) {}
 
     public async run(
@@ -33,34 +33,26 @@ export class AiBrandAnalysisService implements IAiAnalysisService {
             )
         }
 
-        const analysis = await this.ai.generateText([
-            {
-                role: "user",
-                content: `
-                Analyze the following data:
-          
-                {
-                  "brandName": "${googleSheetBrandSelection}",
-                  "trademarks": ${JSON.stringify(euipoTrademarksResult)},
-                  "domains": {
-                    "com": {
-                      "available": true
+        const analysis = await this.ai.generateObject({
+            prompt: `{
+                brandName: ${googleSheetBrandSelection},
+                euipoTrademarksResult: ${euipoTrademarksResult},
+                domains: {
+                    com: {
+                        available: true
                     },
-                    "se": {
-                      "available": true
+                    se: {
+                        available: false
                     }
-                  }
                 }
-              `
-            }
-        ])
+            }`,
+            schema: brandAnalysisSchema,
+            temperature: 0.4,
+            output: "object"
+        })
 
         return analysis.match(
-            result => {
-                const analysisResult = { text: result.text }
-
-                return ok(analysisResult)
-            },
+            result => ok(result),
             error => {
                 this.logger.error(
                     `Error checking WIPO trademark: ${error.message}`

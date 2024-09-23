@@ -12,7 +12,7 @@ import {
     UseGuards
 } from "@nestjs/common"
 import { AI_ANALYSIS_SERVICE_TOKEN } from "./ai-brand-analysis.providers"
-import { IAiAnalysisService, AiAnalysisResult } from "./interfaces/IAiAnalysis"
+import { IAiAnalysisService } from "./interfaces/IAiAnalysis"
 import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
 import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
 import { identity } from "rxjs"
@@ -20,6 +20,7 @@ import { IEuipoTrademark } from "../trademark/interface/IEuipoTrademarksResult"
 import { EnforceServerSystemMessageGuard } from "src/private/gen-ai/guards/enforce-server-system-message.guard"
 import { SystemMessage } from "src/private/gen-ai/decorators/system-message.decorator"
 import { DOMAIN_AND_BRAND_ANALYSIS_SYSTEM_PROMPT } from "./system-prompts/domain-and-brand-analysis"
+import { AiAnalysisResult } from "./types/types"
 
 @Controller("ai-brand-analysis")
 @UseInterceptors(LoggingInterceptor)
