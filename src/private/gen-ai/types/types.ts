@@ -1,4 +1,5 @@
-import { CoreMessage, ProviderMetadata } from "ai"
+import { CoreMessage, generateObject, ProviderMetadata, Schema } from "ai"
+import { ZodType } from "zod"
 
 export type OpenAIChatModelId =
     | "gpt-4o"
@@ -129,4 +130,11 @@ export interface TextPart$1 {
   functionality that can be fully encapsulated in the provider.
    */
     experimental_providerMetadata?: ProviderMetadata
+}
+
+export type GenerateObjectOptions<OBJECT> = Omit<
+    Parameters<typeof generateObject>[0],
+    "schema"
+> & {
+    schema?: ZodType<OBJECT> | Schema<OBJECT>
 }

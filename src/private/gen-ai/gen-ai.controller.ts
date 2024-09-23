@@ -13,7 +13,10 @@ import {
 import { CoreMessage, GenerateTextResult } from "ai"
 import { Result } from "neverthrow"
 import { SystemMessage } from "./decorators/system-message.decorator"
-import { AiGenerateTextDto } from "./dto/create-ai-prompt.dto"
+import {
+    AiGenerateObjectDto,
+    AiGenerateTextDto
+} from "./dto/create-ai-prompt.dto"
 import { GenAIError } from "./error/gen-ai.error"
 import { FunctionTools } from "./functions/function-handlers"
 import { GEN_AI_SERVICE_TOKEN } from "./gen-ai.provider"
@@ -72,6 +75,44 @@ export class OpenAIController {
             (error: GenAIError) => {
                 this.logger.error(`Failed to generate text: ${error.message}`)
 
+                throw new HttpException(error.message, 500)
+            }
+        )
+    }
+
+    @Post("generate-object")
+    @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
+    async generateObject(@Body() body: AiGenerateObjectDto): Promise<unknown> {
+        this.logger.debug(
+            `Received body for object generation: ${JSON.stringify(body, null, 2)}`
+        )
+
+        const { schema, prompt, model } = body
+
+        let result: Result<unknown, GenAIError>
+
+        if (schema) {
+            result = await this.genAIService.generateObject({
+                prompt,
+                schema,
+                output: "object"
+            })
+        } else {
+            result = await this.genAIService.generateObject({
+                prompt,
+                output: "no-schema"
+            })
+        }
+
+        return result.match(
+            response => {
+                this.logger.debug(
+                    `Generated object: ${JSON.stringify(response, null, 2)}`
+                )
+                return response
+            },
+            (error: GenAIError) => {
+                this.logger.error(`Failed to generate object: ${error.message}`)
                 throw new HttpException(error.message, 500)
             }
         )

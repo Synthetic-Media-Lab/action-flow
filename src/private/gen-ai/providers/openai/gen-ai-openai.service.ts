@@ -4,21 +4,29 @@ import { ConfigService } from "@nestjs/config"
 import {
     CoreMessage,
     CoreTool,
+    generateObject,
     generateText,
     GenerateTextResult,
-    LanguageModelV1
+    JSONParseError,
+    JSONValue,
+    LanguageModelV1,
+    TypeValidationError
 } from "ai"
 import { err, ok, Result } from "neverthrow"
-import { GenAIError } from "./error/gen-ai.error"
-import { IGenAI } from "./interface/gen-ai.interface"
-import { CallSettings, OpenAIChatModelId } from "./types/types"
 import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
+import { IGenAI } from "../../interface/gen-ai.interface"
+import {
+    CallSettings,
+    GenerateObjectOptions,
+    OpenAIChatModelId
+} from "../../types/types"
+import { GenAIError } from "../../error/gen-ai.error"
 
 @Injectable()
-export class GenAIService<TOOLS extends Record<string, CoreTool>>
+export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
     implements IGenAI<TOOLS>
 {
-    private readonly logger = new Logger(GenAIService.name)
+    private readonly logger = new Logger(GenAIOpenAIService.name)
     private readonly model: OpenAIChatModelId
     private readonly openai: LanguageModelV1
 
@@ -90,6 +98,50 @@ export class GenAIService<TOOLS extends Record<string, CoreTool>>
             return err(
                 new GenAIError("Failed to generate text using Vercel AI")
             )
+        }
+    }
+
+    public async generateObject<OBJECT extends JSONValue>(
+        options: GenerateObjectOptions<OBJECT>
+    ): Promise<Result<Awaited<ReturnType<typeof generateObject>>, GenAIError>> {
+        try {
+            if (options.schema) {
+                const result = await generateObject<OBJECT>({
+                    ...options,
+                    output: "object",
+                    schema: options.schema,
+                    model: this.openai
+                })
+
+                return ok(result)
+            } else {
+                const result = await generateObject({
+                    ...options,
+                    output: "no-schema",
+                    model: this.openai
+                })
+
+                return ok(result)
+            }
+        } catch (error) {
+            const { message, stack } = formatErrorForLogging(error)
+
+            this.logger.error(
+                `Error during object generation: ${message}`,
+                stack
+            )
+
+            if (error instanceof TypeValidationError) {
+                return err(new GenAIError("Validation error occurred"))
+            } else if (error instanceof JSONParseError) {
+                return err(new GenAIError("Failed to parse JSON"))
+            } else {
+                return err(
+                    new GenAIError(
+                        "Unknown error occurred during object generation"
+                    )
+                )
+            }
         }
     }
 }

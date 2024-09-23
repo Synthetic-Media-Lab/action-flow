@@ -1,14 +1,16 @@
-import { CoreMessage } from "ai"
+import { CoreMessage, JSONValue } from "ai"
 import { Type } from "class-transformer"
 import {
     IsArray,
+    IsIn,
+    IsObject,
     IsOptional,
     IsString,
-    ValidateNested,
     ValidateIf,
-    IsObject,
-    IsIn
+    ValidateNested
 } from "class-validator"
+import { ZodType, ZodTypeDef } from "zod"
+import { OpenAIChatModelId } from "../types/types"
 
 export class AiGenerateTextDto {
     @IsArray()
@@ -47,4 +49,16 @@ export class CoreMessageDto {
     content:
         | string
         | { tool_name: string; tool_output: Record<string, unknown> } = ""
+}
+
+export class AiGenerateObjectDto {
+    @IsString()
+    prompt: string = ""
+
+    @IsOptional()
+    @IsObject()
+    schema?: ZodType<JSONValue, ZodTypeDef, JSONValue>
+
+    @IsString()
+    model: OpenAIChatModelId = "gpt-4o-mini"
 }
