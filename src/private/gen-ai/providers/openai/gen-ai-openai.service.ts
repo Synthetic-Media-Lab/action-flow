@@ -6,21 +6,23 @@ import {
     CoreTool,
     generateObject,
     generateText,
-    GenerateTextResult,
     JSONParseError,
     JSONValue,
+    LanguageModel,
     LanguageModelV1,
     TypeValidationError
 } from "ai"
 import { err, ok, Result } from "neverthrow"
 import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
-import { IGenAI } from "../../interface/gen-ai.interface"
-import {
-    CallSettings,
-    GenerateObjectOptions,
-    OpenAIChatModelId
-} from "../../types/types"
 import { GenAIError } from "../../error/gen-ai.error"
+import {
+    GenerateObjectOptions,
+    GenerateTextOptions,
+    IGenAI
+} from "../../interface/gen-ai.interface"
+import { OpenAIChatModelId } from "../../types/types"
+import { ValidationError } from "src/error/validation.error"
+import { ParseError } from "src/error/parse.error"
 
 @Injectable()
 export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
@@ -40,11 +42,13 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
 
         if (!apiKey) {
             this.logger.error("OpenAI API key is missing in the configuration")
+
             throw new Error("OpenAI API key is missing")
         }
 
         if (!model) {
             this.logger.error("OpenAI model is missing in the configuration")
+
             throw new Error("OpenAI model is missing")
         }
 
@@ -52,41 +56,40 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
         this.openai = openai(this.model)
     }
 
-    public async generateText(
+    public async generateText<TOOLS extends Record<string, CoreTool>>(
         messages: CoreMessage[],
-        options: CallSettings & { tools?: TOOLS } = {}
-    ): Promise<Result<GenerateTextResult<TOOLS>, GenAIError>> {
+        options: GenerateTextOptions<TOOLS> = {}
+    ): Promise<Result<Awaited<ReturnType<typeof generateText>>, GenAIError>> {
         try {
             this.logger.debug(
                 `Using messages: ${JSON.stringify(messages, null, 2)}`
             )
 
-            const result: GenerateTextResult<TOOLS> = await generateText({
-                model: this.openai,
+            const modelToUse: LanguageModel = options.model || this.openai
+            const toolsToUse = options.tools || this.tools
+
+            const {
+                temperature,
+                maxTokens,
+                stopSequences,
+                presencePenalty,
+                frequencyPenalty
+            } = options
+
+            const result = await generateText({
+                model: modelToUse,
                 messages: messages,
-                tools: this.tools,
-                temperature: options.temperature,
-                maxTokens: options.maxTokens,
-                stopSequences: options.stopSequences,
-                presencePenalty: options.presencePenalty,
-                frequencyPenalty: options.frequencyPenalty,
+                tools: toolsToUse,
+                temperature: temperature,
+                maxTokens: maxTokens,
+                stopSequences: stopSequences,
+                presencePenalty: presencePenalty,
+                frequencyPenalty: frequencyPenalty,
                 maxToolRoundtrips: 1
             })
 
-            const { responseMessages, toolResults, finishReason, toolCalls } =
-                result
-
             this.logger.debug(
-                `Response messages: ${JSON.stringify(responseMessages, null, 2)}`
-            )
-            this.logger.debug(
-                `Finish reason: ${JSON.stringify(finishReason, null, 2)}`
-            )
-            this.logger.debug(
-                `Tool results: ${JSON.stringify(toolResults, null, 2)}`
-            )
-            this.logger.debug(
-                `Tool calls: ${JSON.stringify(toolCalls, null, 2)}`
+                `Response messages: ${JSON.stringify(result.responseMessages, null, 2)}`
             )
 
             return ok(result)
@@ -95,9 +98,7 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
 
             this.logger.error(`Failed to generate text: ${message}`)
 
-            return err(
-                new GenAIError("Failed to generate text using Vercel AI")
-            )
+            return err(new Error("Failed to generate text using Vercel AI"))
         }
     }
 
@@ -105,16 +106,18 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
         options: GenerateObjectOptions<OBJECT>
     ): Promise<Result<Awaited<ReturnType<typeof generateObject>>, GenAIError>> {
         try {
+            const modelToUse = options.model || this.openai
+
             this.logger.debug(
-                `Schema passed: ${JSON.stringify(options.schema, null, 2)}`
+                `Options passed: ${JSON.stringify(options, null, 2)}`
             )
 
-            if (options.schema) {
+            if ("schema" in options && options.schema) {
                 const result = await generateObject<OBJECT>({
                     ...options,
                     output: "object",
                     schema: options.schema,
-                    model: this.openai
+                    model: modelToUse
                 })
 
                 return ok(result)
@@ -122,7 +125,7 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
                 const result = await generateObject({
                     ...options,
                     output: "no-schema",
-                    model: this.openai
+                    model: modelToUse
                 })
 
                 return ok(result)
@@ -136,14 +139,12 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
             )
 
             if (error instanceof TypeValidationError) {
-                return err(new GenAIError("Validation error occurred"))
+                return err(new ValidationError("Validation error occurred"))
             } else if (error instanceof JSONParseError) {
-                return err(new GenAIError("Failed to parse JSON"))
+                return err(new ParseError("Failed to parse JSON"))
             } else {
                 return err(
-                    new GenAIError(
-                        "Unknown error occurred during object generation"
-                    )
+                    new Error("Unknown error occurred during object generation")
                 )
             }
         }

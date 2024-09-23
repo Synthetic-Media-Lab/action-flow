@@ -1,8 +1,4 @@
-export class GenAIError extends Error {
-    readonly type = "ai-error"
+import { ParseError } from "src/error/parse.error"
+import { ValidationError } from "src/error/validation.error"
 
-    constructor(message: string) {
-        super(message)
-        this.name = "AIError"
-    }
-}
+export type GenAIError = Error | ValidationError | ParseError

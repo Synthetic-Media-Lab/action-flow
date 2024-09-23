@@ -1,5 +1,4 @@
-import { CoreMessage, generateObject, ProviderMetadata, Schema } from "ai"
-import { ZodType } from "zod"
+import { CoreMessage, generateText, ProviderMetadata } from "ai"
 
 export type OpenAIChatModelId =
     | "gpt-4o"
@@ -18,6 +17,10 @@ export type OpenAIChatModelId =
     | "gpt-3.5-turbo"
     | "gpt-3.5-turbo-1106"
     | (string & {})
+
+export type GenerateTextResponse =
+    | Awaited<ReturnType<typeof generateText>>["responseMessages"]
+    | { message: string }
 
 export type CallSettings = {
     /**
@@ -130,11 +133,4 @@ export interface TextPart$1 {
   functionality that can be fully encapsulated in the provider.
    */
     experimental_providerMetadata?: ProviderMetadata
-}
-
-export type GenerateObjectOptions<OBJECT> = Omit<
-    Parameters<typeof generateObject>[0],
-    "schema"
-> & {
-    schema?: ZodType<OBJECT> | Schema<OBJECT>
 }

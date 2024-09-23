@@ -10,8 +10,8 @@ import {
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
-import { CoreMessage, GenerateTextResult } from "ai"
-import { Result } from "neverthrow"
+import { CoreMessage } from "ai"
+import { brandAnalysisSchema } from "src/public/actions/kh/ai-brand-analysis/schema/brand-analysis-schema"
 import { SystemMessage } from "./decorators/system-message.decorator"
 import {
     AiGenerateObjectDto,
@@ -21,8 +21,8 @@ import { GenAIError } from "./error/gen-ai.error"
 import { FunctionTools } from "./functions/function-handlers"
 import { GEN_AI_SERVICE_TOKEN } from "./gen-ai.provider"
 import { EnforceServerSystemMessageGuard } from "./guards/enforce-server-system-message.guard"
-import { GenerateTextResponse, IGenAI } from "./interface/gen-ai.interface"
-import { brandAnalysisSchema } from "src/public/actions/kh/ai-brand-analysis/schema/brand-analysis-schema"
+import { IGenAI } from "./interface/gen-ai.interface"
+import { GenerateTextResponse } from "./types/types"
 
 interface AIRequestBody {
     system?: string
@@ -42,14 +42,14 @@ export class OpenAIController {
     @SystemMessage("You are a helpful ActionFlow assistant")
     @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
     async generateText(
-        @Body() AiGenerateTextDto: AiGenerateTextDto,
+        @Body() aiGenerateTextDto: AiGenerateTextDto,
         @Req() req: { body: AIRequestBody }
     ): Promise<GenerateTextResponse> {
         this.logger.debug(
-            `Received body: ${JSON.stringify(AiGenerateTextDto, null, 2)}`
+            `Received body: ${JSON.stringify(aiGenerateTextDto, null, 2)}`
         )
 
-        const { messages } = AiGenerateTextDto
+        const { messages } = aiGenerateTextDto
 
         const updatedMessages = this.addSystemMessage(messages, req)
 
@@ -57,13 +57,16 @@ export class OpenAIController {
             `Using messages: ${JSON.stringify(updatedMessages, null, 2)}`
         )
 
-        const result: Result<
-            GenerateTextResult<FunctionTools>,
-            GenAIError
-        > = await this.genAIService.generateText(updatedMessages)
+        const result = await this.genAIService.generateText(updatedMessages, {
+            temperature: aiGenerateTextDto.temperature,
+            maxTokens: aiGenerateTextDto.maxTokens,
+            stopSequences: aiGenerateTextDto.stopSequences,
+            presencePenalty: aiGenerateTextDto.presencePenalty,
+            frequencyPenalty: aiGenerateTextDto.frequencyPenalty
+        })
 
         return result.match(
-            (response: GenerateTextResult<FunctionTools>) => {
+            response => {
                 this.logger.debug(
                     `Result: ${JSON.stringify(response.responseMessages, null, 2)}`
                 )
