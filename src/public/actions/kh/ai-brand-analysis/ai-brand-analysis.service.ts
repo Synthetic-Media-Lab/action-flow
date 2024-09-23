@@ -20,33 +20,44 @@ export class AiBrandAnalysisService implements IAiAnalysisService {
     public async run(
         dto: AiBrandAnalysisDto
     ): Promise<Result<AiAnalysisResult, AiBrandAnalysisError>> {
-        const { text, brand } = dto
-        this.logger.debug(`Analyzing text: ${text}`)
+        const { euipoTrademarksResult, googleSheetBrandSelection } = dto
+        this.logger.debug(
+            `Analyzing brand: ${googleSheetBrandSelection} with EUIPO trademarks: ${euipoTrademarksResult}`
+        )
 
-        if (!text) {
+        if (!euipoTrademarksResult || !googleSheetBrandSelection) {
             return err(
-                new AiBrandAnalysisError("Text is required for analysis")
+                new AiBrandAnalysisError(
+                    `No EUIPO trademarks or brand provided`
+                )
             )
         }
 
         const analysis = await this.ai.generateText([
             {
                 role: "user",
-                content: `Analyze the sentiment of the text: ${text}`
+                content: `
+                Analyze the following data:
+          
+                {
+                  "brandName": "${googleSheetBrandSelection}",
+                  "trademarks": ${JSON.stringify(euipoTrademarksResult)},
+                  "domains": {
+                    "com": {
+                      "available": true
+                    },
+                    "se": {
+                      "available": true
+                    }
+                  }
+                }
+              `
             }
         ])
 
         return analysis.match(
             result => {
                 const analysisResult = { text: result.text }
-
-                /* this.eventEmitter.emit(
-                    "file.upload",
-                    new FileUploadEvent({
-                        fileContent: result.text,
-                        destination: `brand-reports/${brand.toLowerCase()}.txt`
-                    })
-                ) */
 
                 return ok(analysisResult)
             },

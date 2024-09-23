@@ -1,9 +1,3 @@
-import { IsString } from "class-validator"
+import { UploadEuipoResultDto } from "../../trademark/dto/trademark.dto"
 
-export class AiBrandAnalysisDto {
-    @IsString()
-    text: string = ""
-
-    @IsString()
-    brand: string = ""
-}
+export class AiBrandAnalysisDto<T = unknown> extends UploadEuipoResultDto<T> {}

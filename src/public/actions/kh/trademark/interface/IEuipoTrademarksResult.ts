@@ -1,5 +1,9 @@
 export interface IEuipoTrademarksResult<T = unknown> {
     trademarks: T[]
+    totalElements: number
+    totalPages: number
+    size: number
+    page: number
 }
 
 export interface IEuipoTrademark {

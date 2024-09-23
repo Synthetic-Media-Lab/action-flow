@@ -67,7 +67,13 @@ export class UploadEuipoResultDto<T = unknown> {
     @IsObject()
     @ValidateNested()
     @Type(() => EuipoTrademarksResultDto)
-    euipoTrademarksResult: IEuipoTrademarksResult<T> = { trademarks: [] }
+    euipoTrademarksResult: IEuipoTrademarksResult<T> = {
+        trademarks: [],
+        totalElements: 0,
+        totalPages: 0,
+        size: 0,
+        page: 0
+    }
 
     @IsString()
     googleSheetBrandSelection: string = ""
@@ -80,4 +86,16 @@ class EuipoTrademarksResultDto<T = unknown>
     @ValidateNested({ each: true })
     @Type(() => Object)
     trademarks: T[] = []
+
+    @IsInt()
+    totalElements: number = 0
+
+    @IsInt()
+    totalPages: number = 0
+
+    @IsInt()
+    size: number = 0
+
+    @IsInt()
+    page: number = 0
 }
