@@ -22,13 +22,13 @@ import { FunctionTools } from "./functions/function-handlers"
 import { GEN_AI_SERVICE_TOKEN } from "./gen-ai.provider"
 import { EnforceServerSystemMessageGuard } from "./guards/enforce-server-system-message.guard"
 import { GenerateTextResponse, IGenAI } from "./interface/gen-ai.interface"
+import { brandAnalysisSchema } from "src/public/actions/kh/ai-brand-analysis/schema/brand-analysis-schema"
 
 interface AIRequestBody {
     system?: string
 }
 
 @Controller("gen-ai")
-/* @UseInterceptors(OpenAIMessageInterceptor) */
 export class OpenAIController {
     private readonly logger = new Logger(OpenAIController.name)
 
@@ -87,29 +87,21 @@ export class OpenAIController {
             `Received body for object generation: ${JSON.stringify(body, null, 2)}`
         )
 
-        const { schema, prompt, model } = body
+        const { prompt } = body
 
-        let result: Result<unknown, GenAIError>
-
-        if (schema) {
-            result = await this.genAIService.generateObject({
-                prompt,
-                schema,
-                output: "object"
-            })
-        } else {
-            result = await this.genAIService.generateObject({
-                prompt,
-                output: "no-schema"
-            })
-        }
+        const result = await this.genAIService.generateObject({
+            prompt,
+            schema: brandAnalysisSchema,
+            temperature: 0.5,
+            output: "object"
+        })
 
         return result.match(
             response => {
                 this.logger.debug(
                     `Generated object: ${JSON.stringify(response, null, 2)}`
                 )
-                return response
+                return response.object
             },
             (error: GenAIError) => {
                 this.logger.error(`Failed to generate object: ${error.message}`)

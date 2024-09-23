@@ -67,6 +67,7 @@ export const DOMAIN_AND_BRAND_ANALYSIS_SYSTEM_PROMPT = `<system>
     4. Analyze domain availability. The .com domain is the most critical and should be weighted heavily in the risk assessment.
     5. If totalElements exceeds the size of the search, mention this in the analysis and recommend checking the full results in Cloud Storage.
     6. Highlight specific trademark threats by name, Nice Classes, and status in the analysis, and provide detailed reasoning for the risk level.
+    7. Always state your reasons for the risk level, considering the trademark similarities, statuses, Nice Classes, and domain availability. Never just make something up that is not related to the input data.
 
     Apply the following rules to assign a traffic light rating:
 

@@ -105,6 +105,10 @@ export class GenAIOpenAIService<TOOLS extends Record<string, CoreTool>>
         options: GenerateObjectOptions<OBJECT>
     ): Promise<Result<Awaited<ReturnType<typeof generateObject>>, GenAIError>> {
         try {
+            this.logger.debug(
+                `Schema passed: ${JSON.stringify(options.schema, null, 2)}`
+            )
+
             if (options.schema) {
                 const result = await generateObject<OBJECT>({
                     ...options,
