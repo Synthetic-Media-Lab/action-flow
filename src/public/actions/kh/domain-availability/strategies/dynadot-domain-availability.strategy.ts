@@ -40,12 +40,15 @@ export class DynadotDomainAvailabilityStrategy
         )
 
         try {
+            // Fetch the domain availability from Dynadot
             const response = await this.fetchDomainAvailability(domain)
 
             if (!response) {
+                // Handle cases where no response is received
                 return err(new NotFoundError("No data received from Dynadot"))
             }
 
+            // Parse the response to extract necessary information
             const parsedResult = await this.parseDynadotResponse(response)
 
             return ok({
@@ -55,8 +58,8 @@ export class DynadotDomainAvailabilityStrategy
                 pricing: parsedResult.pricing
             })
         } catch (error) {
+            // Handle the error and log it
             const { message } = formatErrorForLogging(error)
-
             this.logger.error(`Error with Dynadot: ${message}`)
 
             return err(new Error(message))
@@ -68,17 +71,19 @@ export class DynadotDomainAvailabilityStrategy
     ): Promise<string | null> {
         const url = `${this.apiUrl}?key=${this.apiKey}&command=search&show_price=1&currency=EUR&domain0=${domain}`
 
+        this.logger.debug(`Fetching domain availability from URL: ${url}`)
+
+        // Fetch HTML response using the FetchService
         const result = await this.fetchService.html(url)
 
         if (result.isErr()) {
-            this.logger.error(
-                `Failed to fetch from Dynadot: ${result.error.message}`
-            )
-            throw new Error(
-                `Failed to fetch data from Dynadot: ${result.error.message}`
-            )
+            // Handle fetch failure
+            const { message } = formatErrorForLogging(result.error)
+            this.logger.error(`Failed to fetch from Dynadot: ${message}`)
+            return null
         }
 
+        this.logger.debug(`Raw Dynadot response: ${result.value}`)
         return result.value
     }
 
@@ -86,17 +91,36 @@ export class DynadotDomainAvailabilityStrategy
         status: DomainStatus
         pricing?: { registrationPrice: number; renewalPrice: number }
     }> {
+        // Parse the XML response
         const parsedXml = (await this.parseStringPromise(response, {
             explicitArray: false
-        })) as DynadotSearchResponse
+        })) as DynadotSearchResponse | null
+
+        if (!parsedXml) {
+            this.logger.error("Failed to parse Dynadot response, null received")
+            return {
+                status: DomainStatus.UNKNOWN
+            }
+        }
 
         const searchHeader = parsedXml?.Results?.SearchResponse?.SearchHeader
 
+        if (!searchHeader || searchHeader.SuccessCode !== "0") {
+            this.logger.error(
+                `Failed to parse Dynadot response: ${JSON.stringify(parsedXml)}`
+            )
+            return {
+                status: DomainStatus.UNKNOWN
+            }
+        }
+
+        // Extract domain availability status
         const status =
-            searchHeader?.Available === "yes"
+            searchHeader.Available === "yes"
                 ? DomainStatus.AVAILABLE
                 : DomainStatus.TAKEN
 
+        // Extract pricing details if available
         let pricing
         if (searchHeader?.Price) {
             const priceMatch = searchHeader.Price.match(
@@ -110,17 +134,23 @@ export class DynadotDomainAvailabilityStrategy
             }
         }
 
+        this.logger.debug(
+            `Parsed domain status: ${status}, Pricing: ${JSON.stringify(pricing)}`
+        )
+
         return { status, pricing }
     }
 
+    // Utility function to parse XML string to JSON object
     private parseStringPromise = (
         xml: string,
         options: object
-    ): Promise<DynadotSearchResponse> =>
-        new Promise((resolve, reject) => {
+    ): Promise<DynadotSearchResponse | null> =>
+        new Promise(resolve => {
             parseString(xml, options, (err, result: DynadotSearchResponse) => {
                 if (err) {
-                    reject(err)
+                    this.logger.error(`Error parsing XML: ${err.message}`)
+                    resolve(null)
                 } else {
                     resolve(result)
                 }

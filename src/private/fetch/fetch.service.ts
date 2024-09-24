@@ -56,9 +56,16 @@ export class FetchService implements IFetchService {
 
             const textBody = await response.text()
 
+            this.logger.debug(`Raw response body: ${textBody}`)
+
+            const contentType = response.headers.get("content-type") || ""
             if (
                 !response.ok ||
-                !response.headers.get("content-type")?.includes("text/html")
+                !(
+                    contentType.includes("text/html") ||
+                    contentType.includes("application/xml") ||
+                    contentType.includes("text/xml")
+                )
             ) {
                 return err(
                     new FetchError(
