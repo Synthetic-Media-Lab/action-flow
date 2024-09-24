@@ -31,27 +31,29 @@ export class DomainAvailabilityController {
     @UsePipes(new ValidationPipe({ transform: true }))
     async check(
         @Query() checkDomainAvailabilityDto: CheckDomainAvailabilityDto
-    ): Promise<DomainAvailabilityResult> {
+    ): Promise<Record<string, DomainAvailabilityResult>> {
+        // Return a record of strategy names to results
         const { domain } = checkDomainAvailabilityDto
 
         this.logger.debug(`Received domain: ${domain}`)
 
-        const result = this.domainAvailabilityService.check(
+        const result = await this.domainAvailabilityService.check(
             checkDomainAvailabilityDto
         )
 
         return result.match(
-            result => result,
+            result => {
+                this.logger.debug(
+                    `Domain availability results: ${JSON.stringify(result, null, 2)}`
+                )
+                return result // Return the object of results from all strategies
+            },
             error => {
                 this.logger.error(
                     `Error checking domain availability: ${error.message}`
                 )
-
                 throw new HttpException(
-                    {
-                        status: HttpStatus.BAD_REQUEST,
-                        error: error.message
-                    },
+                    { status: HttpStatus.BAD_REQUEST, error: error.message },
                     HttpStatus.BAD_REQUEST
                 )
             }

@@ -1,14 +1,25 @@
 import { Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "../dto/domain-availability.dto"
-import { DomainAvailabilityError } from "../error/domain-availability.error"
+import { DomainAvailabilityError } from "../error"
 
-export interface IDomainAvailability extends ICheckDomainAvailability {}
-
-interface ICheckDomainAvailability {
+export interface ICheckDomainAvailability {
     check(
-        brand: CheckDomainAvailabilityDto
-    ): Result<DomainAvailabilityResult, DomainAvailabilityError>
+        dto: CheckDomainAvailabilityDto
+    ): Promise<Result<DomainAvailabilityResult, DomainAvailabilityError>>
 }
+
+export interface IDomainAvailability {
+    check(
+        dto: CheckDomainAvailabilityDto
+    ): Promise<
+        Result<
+            Record<string, DomainAvailabilityResult>,
+            DomainAvailabilityError
+        >
+    >
+}
+
+export interface IDomainAvailabilityStrategy extends ICheckDomainAvailability {}
 
 export enum DomainStatus {
     AVAILABLE = "available",
@@ -20,8 +31,21 @@ export enum DomainStatus {
 export interface DomainAvailabilityResult {
     domain: string
     status: DomainStatus
+    provider: string
     pricing?: {
-        registrationPrice: number
-        renewalPrice: number
+        registrationPrice?: number
+        renewalPrice?: number
     }
+    createdDate?: string
+    expiryDate?: string
+    updatedDate?: string
+    registrar?: {
+        name: string
+        url?: string
+        abuseContactEmail?: string
+        abuseContactPhone?: string
+    }
+    nameServers?: string[]
+    dnssec?: string
+    rawData?: string[]
 }

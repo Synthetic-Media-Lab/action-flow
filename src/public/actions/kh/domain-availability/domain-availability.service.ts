@@ -1,44 +1,50 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { err, ok, Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
-import { DomainAvailabilityError } from "./error/domain-availability.error"
 import {
     DomainAvailabilityResult,
-    DomainStatus,
-    IDomainAvailability
+    IDomainAvailability,
+    IDomainAvailabilityStrategy
 } from "./interfaces/IDomainAvailability"
+import { DomainAvailabilityError } from "./error"
 
 @Injectable()
 export class DomainAvailabilityService implements IDomainAvailability {
     private readonly logger = new Logger(DomainAvailabilityService.name)
 
-    constructor() {}
+    constructor(private readonly strategies: IDomainAvailabilityStrategy[]) {}
 
-    public check({
+    public async check({
         domain
-    }: CheckDomainAvailabilityDto): Result<
-        DomainAvailabilityResult,
-        DomainAvailabilityError
+    }: CheckDomainAvailabilityDto): Promise<
+        Result<
+            Record<string, DomainAvailabilityResult>,
+            DomainAvailabilityError
+        >
     > {
-        this.logger.debug(`Checking domain availability for: ${domain}`)
+        const results: Record<string, DomainAvailabilityResult> = {}
+        const errors: string[] = []
 
-        if (!domain) {
-            return err(new DomainAvailabilityError("Domain is required"))
+        for (const strategy of this.strategies) {
+            const result = await strategy.check({ domain })
+
+            if (result.isOk()) {
+                results[strategy.constructor.name] = result.value
+            } else {
+                errors.push(
+                    `Strategy ${strategy.constructor.name} failed: ${result.error.message}`
+                )
+            }
         }
 
-        return ok(
-            Math.random() > 0.5
-                ? {
-                      domain,
-                      status:
-                          Math.random() > 0.5
-                              ? DomainStatus.AVAILABLE
-                              : DomainStatus.TAKEN
-                  }
-                : {
-                      domain,
-                      status: DomainStatus.UNKNOWN
-                  }
-        )
+        if (Object.keys(results).length === 0) {
+            return err(
+                new Error(
+                    "No strategies succeeded. Errors: " + errors.join(", ")
+                )
+            )
+        }
+
+        return ok(results)
     }
 }

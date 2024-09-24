@@ -46,6 +46,8 @@
         "puppeteer": "^23.3.0",
         "reflect-metadata": "^0.2.0",
         "rxjs": "^7.8.1",
+        "whoiser": "^1.18.0",
+        "xml2js": "^0.6.2",
         "zod": "^3.23.8"
     },
     "devDependencies": {
@@ -58,6 +60,7 @@
         "@types/jest": "^29.5.2",
         "@types/node": "^20.3.1",
         "@types/supertest": "^6.0.0",
+        "@types/xml2js": "^0.4.14",
         "@typescript-eslint/eslint-plugin": "^8.0.0",
         "@typescript-eslint/parser": "^8.0.0",
         "commitizen": "^4.3.0",
