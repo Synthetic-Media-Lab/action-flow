@@ -8,11 +8,11 @@ import {
     Logger,
     Post,
     Query,
-    UseInterceptors,
     UsePipes,
     ValidationPipe
 } from "@nestjs/common"
-import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
+import { identity } from "rxjs"
+import { CloudMetadataFile } from "src/private/cloud-storage/types/cloud-fIle-types"
 import { CheckTrademarkDto, UploadEuipoResultDto } from "./dto/trademark.dto"
 import {
     IEuipoTrademark,
@@ -20,11 +20,8 @@ import {
 } from "./interface/IEuipoTrademarksResult"
 import { ITrademark } from "./interface/ITrademark"
 import { TRADEMARK_SERVICE_TOKEN } from "./trademark.providers"
-import { CloudMetadataFile } from "src/private/cloud-storage/types/cloud-fIle-types"
-import { identity } from "rxjs"
 
 @Controller("trademark")
-@UseInterceptors(LoggingInterceptor)
 export class TrademarkController {
     private readonly logger: Logger
 

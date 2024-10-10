@@ -1,29 +1,26 @@
 import {
+    Body,
     Controller,
-    Post,
     HttpException,
     HttpStatus,
     Inject,
-    Body,
-    UsePipes,
-    ValidationPipe,
     Logger,
-    UseInterceptors,
-    UseGuards
+    Post,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
 } from "@nestjs/common"
-import { AI_ANALYSIS_SERVICE_TOKEN } from "./ai-brand-analysis.providers"
-import { IAiAnalysisService } from "./interfaces/IAiAnalysis"
-import { LoggingInterceptor } from "src/shared/interceptors/logging-interceptor"
-import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
 import { identity } from "rxjs"
-import { IEuipoTrademark } from "../trademark/interface/IEuipoTrademarksResult"
-import { EnforceServerSystemMessageGuard } from "src/private/gen-ai/guards/enforce-server-system-message.guard"
 import { SystemMessage } from "src/private/gen-ai/decorators/system-message.decorator"
+import { EnforceServerSystemMessageGuard } from "src/private/gen-ai/guards/enforce-server-system-message.guard"
+import { IEuipoTrademark } from "../trademark/interface/IEuipoTrademarksResult"
+import { AI_ANALYSIS_SERVICE_TOKEN } from "./ai-brand-analysis.providers"
+import { AiBrandAnalysisDto } from "./dto/ai-brand-analysis.dto"
+import { IAiAnalysisService } from "./interfaces/IAiAnalysis"
 import { DOMAIN_AND_BRAND_ANALYSIS_SYSTEM_PROMPT } from "./system-prompts/domain-and-brand-analysis"
 import { AiAnalysisResult } from "./types/types"
 
 @Controller("ai-brand-analysis")
-@UseInterceptors(LoggingInterceptor)
 export class AiBrandAnalysisController {
     private readonly logger = new Logger(AiBrandAnalysisController.name)
 
