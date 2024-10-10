@@ -2,7 +2,8 @@ import { Module } from "@nestjs/common"
 import { DomainAvailabilityController } from "./domain-availability.controller"
 import { domainAvailabilityServiceFactory } from "./domain-availability.providers"
 import { WhoiserDomainAvailabilityStrategy } from "./strategies/whoiser-domain-availability.strategy"
-import { DynadotDomainAvailabilityStrategy } from "./strategies/dynadot-domain-availability.strategy" // Add this import
+import { DynadotDomainAvailabilityStrategy } from "./strategies/dynadot-domain-availability.strategy"
+import { GoDaddyDomainAvailabilityStrategy } from "./strategies/godaddy-domain-availability.strategy"
 import { FetchModule } from "src/private/fetch/fetch.module"
 
 @Module({
@@ -11,7 +12,8 @@ import { FetchModule } from "src/private/fetch/fetch.module"
     providers: [
         domainAvailabilityServiceFactory,
         WhoiserDomainAvailabilityStrategy,
-        DynadotDomainAvailabilityStrategy
+        DynadotDomainAvailabilityStrategy,
+        GoDaddyDomainAvailabilityStrategy
     ],
     exports: [domainAvailabilityServiceFactory]
 })

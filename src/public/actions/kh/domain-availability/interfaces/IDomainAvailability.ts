@@ -8,7 +8,7 @@ export interface ICheckDomainAvailability {
     ): Promise<Result<DomainAvailabilityResult, DomainAvailabilityError>>
 }
 
-export interface IDomainAvailability {
+export interface ICheckDomainAvailabilityStrategyResults {
     check(
         dto: CheckDomainAvailabilityDto
     ): Promise<
@@ -24,7 +24,6 @@ export interface IDomainAvailabilityStrategy extends ICheckDomainAvailability {}
 export enum DomainStatus {
     AVAILABLE = "available",
     TAKEN = "taken",
-    FOR_SALE = "for-sale",
     UNKNOWN = "unknown"
 }
 
@@ -35,6 +34,7 @@ export interface DomainAvailabilityResult {
     pricing?: {
         registrationPrice?: number
         renewalPrice?: number
+        currency?: string
     }
     createdDate?: string
     expiryDate?: string

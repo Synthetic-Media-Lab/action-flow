@@ -2,17 +2,17 @@ import { Injectable, Logger } from "@nestjs/common"
 import { ConfigService } from "@nestjs/config"
 import { err, ok, Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "../dto/domain-availability.dto"
-import {
-    DomainAvailabilityResult,
-    DomainStatus,
-    IDomainAvailabilityStrategy
-} from "../interfaces/IDomainAvailability"
 import { DomainAvailabilityError } from "../error"
 import { NotFoundError } from "src/error/not-found.error"
 import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 import { FetchService } from "src/private/fetch/fetch.service"
 import { DynadotSearchResponse } from "../types/dynadot"
 import { parseString } from "xml2js"
+import {
+    DomainAvailabilityResult,
+    DomainStatus,
+    IDomainAvailabilityStrategy
+} from "../interfaces/IDomainAvailability"
 
 @Injectable()
 export class DynadotDomainAvailabilityStrategy

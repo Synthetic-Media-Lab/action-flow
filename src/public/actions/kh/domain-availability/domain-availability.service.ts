@@ -1,15 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common"
 import { err, ok, Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
+import { DomainAvailabilityError } from "./error"
 import {
     DomainAvailabilityResult,
-    IDomainAvailability,
+    ICheckDomainAvailabilityStrategyResults,
     IDomainAvailabilityStrategy
 } from "./interfaces/IDomainAvailability"
-import { DomainAvailabilityError } from "./error"
 
 @Injectable()
-export class DomainAvailabilityService implements IDomainAvailability {
+export class DomainAvailabilityService
+    implements ICheckDomainAvailabilityStrategyResults
+{
     private readonly logger = new Logger(DomainAvailabilityService.name)
 
     constructor(private readonly strategies: IDomainAvailabilityStrategy[]) {}

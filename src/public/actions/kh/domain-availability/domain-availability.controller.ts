@@ -13,7 +13,7 @@ import { DOMAIN_AVAILABILITY_SERVICE_TOKEN } from "./domain-availability.provide
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 import {
     DomainAvailabilityResult,
-    IDomainAvailability
+    ICheckDomainAvailabilityStrategyResults
 } from "./interfaces/IDomainAvailability"
 
 @Controller("domain-availability")
@@ -22,7 +22,7 @@ export class DomainAvailabilityController {
 
     constructor(
         @Inject(DOMAIN_AVAILABILITY_SERVICE_TOKEN)
-        private readonly domainAvailabilityService: IDomainAvailability
+        private readonly domainAvailabilityService: ICheckDomainAvailabilityStrategyResults
     ) {
         this.logger = new Logger(DomainAvailabilityController.name)
     }
@@ -32,7 +32,6 @@ export class DomainAvailabilityController {
     async check(
         @Query() checkDomainAvailabilityDto: CheckDomainAvailabilityDto
     ): Promise<Record<string, DomainAvailabilityResult>> {
-        // Return a record of strategy names to results
         const { domain } = checkDomainAvailabilityDto
 
         this.logger.debug(`Received domain: ${domain}`)
@@ -46,7 +45,7 @@ export class DomainAvailabilityController {
                 this.logger.debug(
                     `Domain availability results: ${JSON.stringify(result, null, 2)}`
                 )
-                return result // Return the object of results from all strategies
+                return result
             },
             error => {
                 this.logger.error(

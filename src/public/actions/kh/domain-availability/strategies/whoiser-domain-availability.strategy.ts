@@ -1,15 +1,14 @@
-import whoiser from "whoiser"
 import { Injectable, Logger } from "@nestjs/common"
-import { err, ok, Result } from "neverthrow"
+import { ok, Result } from "neverthrow"
+import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
+import whoiser from "whoiser"
 import { CheckDomainAvailabilityDto } from "../dto/domain-availability.dto"
+import { DomainAvailabilityError } from "../error"
 import {
     DomainAvailabilityResult,
     DomainStatus,
     IDomainAvailabilityStrategy
 } from "../interfaces/IDomainAvailability"
-import { DomainAvailabilityError } from "../error"
-import { NotFoundError } from "src/error/not-found.error"
-import { formatErrorForLogging } from "src/shared/pure-utils/pure-utils"
 import { WhoisRecord, WhoisSearchResult } from "../types/whoiser"
 
 @Injectable()
@@ -31,14 +30,21 @@ export class WhoiserDomainAvailabilityStrategy
             const data: WhoisSearchResult = await whoiser(domain)
 
             if (!data) {
-                return err(new NotFoundError("No data received from Whoiser"))
+                return ok(
+                    this.createErrorResult(
+                        domain,
+                        "No data received from Whoiser"
+                    )
+                )
             }
 
             const status = this.parseWhoiserStatus(data)
             const domainInfo = this.extractDomainInformation(data)
 
             if (!domainInfo) {
-                return err(new Error("Incomplete domain info"))
+                return ok(
+                    this.createErrorResult(domain, "Incomplete domain info")
+                )
             }
 
             return ok({
@@ -49,14 +55,19 @@ export class WhoiserDomainAvailabilityStrategy
             })
         } catch (error) {
             const { message } = formatErrorForLogging(error)
+
             this.logger.error(`Error with Whoiser: ${message}`)
-            return err(new Error(message))
+
+            const errorResult = this.createErrorResult(domain, message)
+
+            return ok(errorResult)
         }
     }
 
     private parseWhoiserStatus(data: WhoisSearchResult): DomainStatus {
         for (const key in data) {
             const record = data[key]
+
             if (this.isValidWhoisRecord(record)) {
                 if (record["Domain Name"] && record["Created Date"]) {
                     return DomainStatus.TAKEN
@@ -101,5 +112,23 @@ export class WhoiserDomainAvailabilityStrategy
             record !== null &&
             !Array.isArray(record)
         )
+    }
+
+    private createErrorResult(
+        domain: string,
+        errorMessage: string,
+        data?: WhoisSearchResult
+    ): DomainAvailabilityResult {
+        return {
+            domain,
+            status: DomainStatus.UNKNOWN,
+            provider: "Whoiser",
+            rawData: [
+                JSON.stringify({
+                    errorMessage,
+                    data
+                })
+            ]
+        }
     }
 }

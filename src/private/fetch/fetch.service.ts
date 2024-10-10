@@ -28,21 +28,34 @@ export class FetchService implements IFetchService {
                 JSON.stringify(response.status)
             )
 
-            if (!response.ok) {
+            const responseBodyResult = await this.getResponseBody<T>(response)
+
+            if (responseBodyResult.isErr()) {
                 return err(
                     new FetchError(
                         response.statusText || "Unknown error",
-                        response.status
+                        response.status,
+                        JSON.stringify(responseBodyResult.error)
                     )
                 )
             }
 
-            const jsonResponse = await response.json()
+            if (!response.ok) {
+                return err(
+                    new FetchError(
+                        response.statusText || "Unknown error",
+                        response.status,
+                        JSON.stringify(responseBodyResult.value)
+                    )
+                )
+            }
 
-            return ok(jsonResponse)
+            return ok(responseBodyResult.value)
         } catch (error) {
             return err(
-                new FetchError((error as Error).message || "Fetch failed")
+                new FetchError(
+                    error instanceof Error ? error.message : "Unknown error"
+                )
             )
         }
     }
@@ -78,7 +91,62 @@ export class FetchService implements IFetchService {
             return ok(textBody)
         } catch (error) {
             return err(
-                new FetchError((error as Error).message || "Fetch failed")
+                new FetchError(
+                    error instanceof Error ? error.message : "Unknown error"
+                )
+            )
+        }
+    }
+
+    private async getResponseBody<T>(
+        response: Response
+    ): Promise<Result<T, FetchError>> {
+        const contentType = response.headers.get("content-type") || ""
+
+        try {
+            if (contentType.includes("application/json")) {
+                try {
+                    const json = (await response.json()) as T
+
+                    this.logger.debug("Parsed JSON:", json)
+
+                    return ok(json)
+                } catch (jsonError) {
+                    this.logger.warn(
+                        "Failed to parse JSON body:",
+                        (jsonError as Error).message
+                    )
+
+                    return err(
+                        new FetchError("Failed to parse JSON", response.status)
+                    )
+                }
+            } else {
+                this.logger.warn("Response content is not JSON")
+
+                return err(
+                    new FetchError("Response is not JSON", response.status)
+                )
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                this.logger.error(
+                    "Error processing response body:",
+                    error.message
+                )
+
+                return err(
+                    new FetchError("Error processing response", response.status)
+                )
+            }
+
+            this.logger.error(
+                "Error processing response body:",
+                JSON.stringify(error)
+            )
+
+            return err(
+                new FetchError("Error processing response", response.status)
             )
         }
     }
