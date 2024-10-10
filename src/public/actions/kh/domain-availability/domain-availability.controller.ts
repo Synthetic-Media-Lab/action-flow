@@ -12,8 +12,8 @@ import {
 import { DOMAIN_AVAILABILITY_SERVICE_TOKEN } from "./domain-availability.providers"
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 import {
-    DomainAvailabilityResult,
-    ICheckDomainAvailabilityStrategyResults
+    ICheckDomainAvailabilityStrategyResults,
+    MultiDomainAvailabilityResult
 } from "./interfaces/IDomainAvailability"
 
 @Controller("domain-availability")
@@ -31,10 +31,10 @@ export class DomainAvailabilityController {
     @UsePipes(new ValidationPipe({ transform: true }))
     async check(
         @Query() checkDomainAvailabilityDto: CheckDomainAvailabilityDto
-    ): Promise<Record<string, DomainAvailabilityResult>> {
-        const { domain } = checkDomainAvailabilityDto
+    ): Promise<Record<string, MultiDomainAvailabilityResult>> {
+        const { domainName } = checkDomainAvailabilityDto
 
-        this.logger.debug(`Received domain: ${domain}`)
+        this.logger.debug(`Received domain name: ${domainName}`)
 
         const result = await this.domainAvailabilityService.check(
             checkDomainAvailabilityDto

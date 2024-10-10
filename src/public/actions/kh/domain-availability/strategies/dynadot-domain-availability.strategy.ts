@@ -31,17 +31,17 @@ export class DynadotDomainAvailabilityStrategy
     }
 
     public async check({
-        domain
+        domainName
     }: CheckDomainAvailabilityDto): Promise<
         Result<DomainAvailabilityResult, DomainAvailabilityError>
     > {
         this.logger.debug(
-            `Checking domain availability with Dynadot for: ${domain}`
+            `Checking domain availability with Dynadot for: ${domainName}`
         )
 
         try {
             // Fetch the domain availability from Dynadot
-            const response = await this.fetchDomainAvailability(domain)
+            const response = await this.fetchDomainAvailability(domainName)
 
             if (!response) {
                 // Handle cases where no response is received
@@ -52,7 +52,7 @@ export class DynadotDomainAvailabilityStrategy
             const parsedResult = await this.parseDynadotResponse(response)
 
             return ok({
-                domain,
+                domain: domainName,
                 status: parsedResult.status,
                 provider: "Dynadot",
                 pricing: parsedResult.pricing

@@ -3,7 +3,7 @@ import { err, ok, Result } from "neverthrow"
 import { CheckDomainAvailabilityDto } from "./dto/domain-availability.dto"
 import { DomainAvailabilityError } from "./error"
 import {
-    DomainAvailabilityResult,
+    MultiDomainAvailabilityResult,
     ICheckDomainAvailabilityStrategyResults,
     IDomainAvailabilityStrategy
 } from "./interfaces/IDomainAvailability"
@@ -13,29 +13,46 @@ export class DomainAvailabilityService
     implements ICheckDomainAvailabilityStrategyResults
 {
     private readonly logger = new Logger(DomainAvailabilityService.name)
+    private readonly tlds: string[]
 
-    constructor(private readonly strategies: IDomainAvailabilityStrategy[]) {}
+    constructor(private readonly strategies: IDomainAvailabilityStrategy[]) {
+        this.tlds = process.env.TLDS?.split(",") || [
+            ".com",
+            ".se",
+            ".fi",
+            ".no"
+        ]
+    }
 
     public async check({
-        domain
+        domainName
     }: CheckDomainAvailabilityDto): Promise<
         Result<
-            Record<string, DomainAvailabilityResult>,
+            Record<string, MultiDomainAvailabilityResult>,
             DomainAvailabilityError
         >
     > {
-        const results: Record<string, DomainAvailabilityResult> = {}
+        const results: Record<string, MultiDomainAvailabilityResult> = {}
         const errors: string[] = []
 
         for (const strategy of this.strategies) {
-            const result = await strategy.check({ domain })
+            const strategyResults: MultiDomainAvailabilityResult = {}
 
-            if (result.isOk()) {
-                results[strategy.constructor.name] = result.value
-            } else {
-                errors.push(
-                    `Strategy ${strategy.constructor.name} failed: ${result.error.message}`
-                )
+            for (const tld of this.tlds) {
+                const fullDomain = `${domainName}${tld}`
+                const result = await strategy.check({ domainName: fullDomain })
+
+                if (result.isOk()) {
+                    strategyResults[tld] = result.value
+                } else {
+                    errors.push(
+                        `Strategy ${strategy.constructor.name} failed for ${fullDomain}: ${result.error.message}`
+                    )
+                }
+            }
+
+            if (Object.keys(strategyResults).length > 0) {
+                results[strategy.constructor.name] = strategyResults
             }
         }
 

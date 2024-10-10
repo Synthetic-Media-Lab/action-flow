@@ -18,21 +18,23 @@ export class WhoiserDomainAvailabilityStrategy
     private readonly logger = new Logger(WhoiserDomainAvailabilityStrategy.name)
 
     public async check({
-        domain
+        domainName
     }: CheckDomainAvailabilityDto): Promise<
         Result<DomainAvailabilityResult, DomainAvailabilityError>
     > {
         this.logger.debug(
-            `Checking domain availability with Whoiser for: ${domain}`
+            `Checking domain availability with Whoiser for: ${domainName}`
         )
 
         try {
-            const data: WhoisSearchResult = await whoiser(domain)
+            const data: WhoisSearchResult = await whoiser(domainName)
 
-            if (!data) {
+            this.logger.debug("Response data: ", JSON.stringify(data, null, 2))
+
+            if (!data || Object.keys(data).length === 0) {
                 return ok(
                     this.createErrorResult(
-                        domain,
+                        domainName,
                         "No data received from Whoiser"
                     )
                 )
@@ -43,12 +45,12 @@ export class WhoiserDomainAvailabilityStrategy
 
             if (!domainInfo) {
                 return ok(
-                    this.createErrorResult(domain, "Incomplete domain info")
+                    this.createErrorResult(domainName, "Incomplete domain info")
                 )
             }
 
             return ok({
-                domain,
+                domain: domainName,
                 status,
                 provider: "Whoiser",
                 ...domainInfo
@@ -58,7 +60,7 @@ export class WhoiserDomainAvailabilityStrategy
 
             this.logger.error(`Error with Whoiser: ${message}`)
 
-            const errorResult = this.createErrorResult(domain, message)
+            const errorResult = this.createErrorResult(domainName, message)
 
             return ok(errorResult)
         }
@@ -69,12 +71,33 @@ export class WhoiserDomainAvailabilityStrategy
             const record = data[key]
 
             if (this.isValidWhoisRecord(record)) {
-                if (record["Domain Name"] && record["Created Date"]) {
+                // Serialize the record for easier searching
+                const serializedRecord = JSON.stringify(record).toLowerCase()
+
+                // 1. Check for availability based on "no match" or "not found"
+                if (
+                    serializedRecord.includes("no match") ||
+                    serializedRecord.includes("not found")
+                ) {
+                    return DomainStatus.AVAILABLE
+                }
+
+                // 2. Check for registration based on "registered" or "created" (case insensitive)
+                if (
+                    serializedRecord.includes("registered") ||
+                    serializedRecord.includes("created")
+                ) {
+                    return DomainStatus.TAKEN
+                }
+
+                // 3. Fallback: If any date pattern exists (e.g., YYYY-MM-DD), it usually means the domain is taken
+                if (/\d{4}-\d{2}-\d{2}/.test(serializedRecord)) {
                     return DomainStatus.TAKEN
                 }
             }
         }
-        return DomainStatus.AVAILABLE
+
+        return DomainStatus.UNKNOWN
     }
 
     private extractDomainInformation(

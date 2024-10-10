@@ -29,24 +29,24 @@ export class GoDaddyDomainAvailabilityStrategy
     }
 
     public async check({
-        domain
+        domainName
     }: CheckDomainAvailabilityDto): Promise<
         Result<DomainAvailabilityResult, DomainAvailabilityError>
     > {
         this.logger.debug(
-            `Checking domain availability with GoDaddy for: ${domain}`
+            `Checking domain availability with GoDaddy for: ${domainName}`
         )
 
         try {
-            const response = await this.fetchDomainAvailability(domain)
+            const response = await this.fetchDomainAvailability(domainName)
 
-            return ok(this.parseGoDaddyResponse(response, domain))
+            return ok(this.parseGoDaddyResponse(response, domainName))
         } catch (error) {
             const { message } = formatErrorForLogging(error)
 
             this.logger.error(`Error with GoDaddy: ${message}`)
 
-            const errorResult = this.createErrorResult(domain, message)
+            const errorResult = this.createErrorResult(domainName, message)
 
             return ok(errorResult)
         }
