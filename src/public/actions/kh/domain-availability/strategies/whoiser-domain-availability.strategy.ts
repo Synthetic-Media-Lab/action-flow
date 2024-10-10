@@ -71,33 +71,45 @@ export class WhoiserDomainAvailabilityStrategy
             const record = data[key]
 
             if (this.isValidWhoisRecord(record)) {
-                // Serialize the record for easier searching
-                const serializedRecord = JSON.stringify(record).toLowerCase()
+                const serializedRecord = this.serializeRecord(record)
 
-                // 1. Check for availability based on "no match" or "not found"
-                if (
-                    serializedRecord.includes("no match") ||
-                    serializedRecord.includes("not found")
-                ) {
+                if (this.isDomainAvailable(serializedRecord)) {
                     return DomainStatus.AVAILABLE
                 }
 
-                // 2. Check for registration based on "registered" or "created" (case insensitive)
-                if (
-                    serializedRecord.includes("registered") ||
-                    serializedRecord.includes("created")
-                ) {
+                if (this.isDomainTaken(serializedRecord)) {
                     return DomainStatus.TAKEN
                 }
 
-                // 3. Fallback: If any date pattern exists (e.g., YYYY-MM-DD), it usually means the domain is taken
-                if (/\d{4}-\d{2}-\d{2}/.test(serializedRecord)) {
+                if (this.containsDate(serializedRecord)) {
                     return DomainStatus.TAKEN
                 }
             }
         }
 
         return DomainStatus.UNKNOWN
+    }
+
+    private serializeRecord(record: WhoisRecord): string {
+        return JSON.stringify(record).toLowerCase()
+    }
+
+    private isDomainAvailable(serializedRecord: string): boolean {
+        return (
+            serializedRecord.includes("no match") ||
+            serializedRecord.includes("not found")
+        )
+    }
+
+    private isDomainTaken(serializedRecord: string): boolean {
+        return (
+            serializedRecord.includes("registered") ||
+            serializedRecord.includes("created")
+        )
+    }
+
+    private containsDate(serializedRecord: string): boolean {
+        return /\d{4}-\d{2}-\d{2}/.test(serializedRecord)
     }
 
     private extractDomainInformation(

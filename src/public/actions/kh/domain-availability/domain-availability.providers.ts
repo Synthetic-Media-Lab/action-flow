@@ -13,9 +13,7 @@ export const domainAvailabilityServiceFactory = {
         dynadotStrategy: DynadotDomainAvailabilityStrategy,
         godaddyStrategy: GoDaddyDomainAvailabilityStrategy
     ) => {
-        return new DomainAvailabilityService([
-            /* godaddyStrategy,  */ whoiserStrategy
-        ])
+        return new DomainAvailabilityService([godaddyStrategy, whoiserStrategy])
     },
     inject: [
         WhoiserDomainAvailabilityStrategy,
